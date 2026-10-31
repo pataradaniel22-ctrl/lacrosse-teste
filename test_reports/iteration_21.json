@@ -1,0 +1,44 @@
+{
+  "summary": "Phase 5 (OSTRC-H2 medical follow-up: alerts + review-queue + review notes + athlete messages + methodology page) end-to-end verified. Backend: 11/11 pytest passed. GET /api/health/staff/alerts returns 7 alerts with correct shape (type in substantial|contact|worsening, severity, handled bool, submission_id), 3 currently unhandled; staff-only (athlete token -> 403, no-auth -> 403). GET /api/health/staff/review-queue returns items sorted not_reviewed>in_review>reviewed with correct notes_count and pending_count; staff-only. POST /api/health/staff/review/{id}: unknown id -> 404, athlete -> 403; note without mark_reviewed sets status to 'in_review' and appends note with author/created_at/visible flag; mark_reviewed=true sets status='reviewed'+reviewed_by+reviewed_at. GET /api/health/athlete/messages returns ONLY visible_to_athlete==true notes; added one visible + one private note as staff, athlete only sees the visible one. E2E: unhandled alert -> POST review with mark_reviewed -> alerts re-fetch shows handled=true for that athlete and active_count decreased by pre-count. Frontend staff: /staff/health renders health-alerts-card with 7 alerts, each has alert-contact-<id> (mailto:) and alert-review-<id> that opens medical-review-panel; all 4 controls (review-note-input, review-visible-checkbox, review-add-note-btn, review-mark-reviewed-btn) present and submit successfully. methodology-nav-btn on Staff Dashboard navigates to /staff/methodology which renders methodology-page and 31 methodology-metric-<key> cards. Chart-caption legends still render (6 on Staff Dashboard) — regression OK. Frontend athlete (lucas.silva): medical-messages-card is visible with the TEST_visible note; private note NOT leaked into the DOM.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Staff Dashboard",
+        "issues": ["Recharts warning 'width(-1) and height(-1) of chart should be greater than 0' still fires on initial load (pre-existing, non-blocking; ResponsiveContainer parent has 0 size at first paint)."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_health_phase5_medical.py",
+    "/app/test_reports/pytest/health_phase5.xml"
+  ],
+  "action_items": [
+    "(Fixed by testing agent) health_routes.py::_team_athletes projection was missing 'email' → all alerts returned athlete_email=null causing 'mailto:null' links in Health Alerts card. Fixed by adding 'email': 1 to the find() projection at line 448. All alert emails now resolve correctly (verified for Julia Pereira, Camila Lima, Fernanda Silva). Please review the fix and keep as-is."
+  ],
+  "critical_code_review_comments": [
+    "BUG (FIXED): health_routes.py L448 _team_athletes projection excluded 'email' → athlete_email was None on every alert, breaking the mailto Contact links (rendered as 'mailto:null'). Fix applied: added 'email': 1 to the projection. Now alerts+review-queue+report/team all correctly expose athlete_email.",
+    "health_routes.py health_alerts (830-856): correct implementation of the 3 triggers (substantial / contact-request / worsening 3-week strict-increase). handled flag derives from latest.review_status=='reviewed' — correct. Sort order (handled asc, severity asc) surfaces unhandled+high first — good.",
+    "health_routes.py review_queue (858-887): correct filter (has_health_problem only), correct sort (status_rank then severity desc). notes_count derives from medical_notes array length — good.",
+    "health_routes.py review_submission (889-918): empty note is a no-op (correct), note-only sets in_review only when currently not_reviewed (correct — does not downgrade a 'reviewed' state on later note additions), mark_reviewed sets reviewer name/timestamp. Returns fresh medical_notes so UI can render immediately. 404 for unknown id — good.",
+    "health_routes.py athlete_messages (920-934): Mongo filter uses dot-path 'medical_notes.visible_to_athlete': True to prefetch, then re-filters in-app — safe against docs that contain a mix of visible/private notes (docs matched by the outer filter still get their private notes filtered out in the Python loop). Correct.",
+    "HealthSurveillance.js medical-review-panel: all 4 data-testids present and wired to submitReview() with the correct body {note, visible_to_athlete, mark_reviewed}. Modal reflows on submit (alerts re-fetch). Good.",
+    "Methodology.js: 31 cards render (matches spec's ~31). Categories cover Readiness, Load, Neuromuscular, Pain, OSTRC-H2, Female Wellness, General/Compliance. Print button (window.print) — good."
+  ],
+  "updated_files": [
+    "/app/backend/health_routes.py (line 448: added 'email': 1 to _team_athletes projection — fixes mailto:null on alert Contact links)",
+    "/app/backend/tests/test_health_phase5_medical.py (new — 11 tests)"
+  ],
+  "success_rate": {"backend": "100% (11/11)", "frontend": "100% (all 4 UI pieces + methodology + regression verified)"},
+  "test_credentials": "Staff: cristina.velez@brasillacrosse.com / 123456. Athlete: lucas.silva@email.com / demo123.",
+  "seed_data_creation": "Added TEST_-prefixed medical notes on Lucas Silva's latest submission (1 visible: 'TEST_visible_note_for_athlete', 1 private: 'TEST_private_staff_only_note') and 1 visible 'TEST_UI_visible_note' via the UI flow. Also invoked review-with-mark_reviewed on one currently-unhandled alert (E2E test); this flipped that athlete's alert to handled=true. Non-destructive; no seeded data was modified beyond adding notes/review state.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite: /app/backend/tests/test_health_phase5_medical.py (uses REACT_APP_BACKEND_URL env var). Login endpoint returns {token,user_type,user} (not access_token). To resolve an athlete's submission for note-testing, use GET /api/staff/athletes then GET /api/health/staff/athlete/{id} which returns full submissions array. The alert Contact link is a mailto: (there is no phone field on athletes — per spec, don't flag). E2E review-cycle test mutates state — it marks one alert as reviewed; running the suite repeatedly will progressively empty the not_reviewed pool, and 'test_note_without_mark_sets_in_review' will skip once no not_reviewed items remain. To reset, either add new health submissions or clear medical_notes / review_status on submissions.",
+  "rca of the issue": "Root cause of 'mailto:null' bug: _team_athletes MongoDB projection at health_routes.py:448 explicitly whitelisted {id, name, team, position} but omitted email. Because _mk_alert relies on athlete.get('email') and the field was projected out, every alert emitted athlete_email=null. Symptoms would only surface in the UI (mailto:null) since the JSON key still exists — the previous test iteration's shape check ('athlete_email' in a) accepted null. Reproduction: GET /api/health/staff/alerts as staff before fix → all athlete_email values were None. Mitigation: added 'email': 1 to the projection; verified emails now populate (julia.pereira@email.com etc.); added a stronger regression assertion in test_alerts_staff_ok that asserts athlete_email is truthy and contains '@'."
+}

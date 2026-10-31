@@ -1,0 +1,56 @@
+{
+  "summary": "End-to-end testing of Recovery Points Ecosystem Phase 1. Backend pytest suite (12 tests, /app/backend/tests/test_recovery.py) PASSES 12/12: catalog defaults (Gold=40/Silver=25/Bronze=15, 14 default activities), automatic mode log submission with proof file upload (awarded immediately, status=approved), missing-file submission returns 422 (proof mandatory), today + my-summary endpoints (points/target/color/goal_achieved/remaining/streak/compliance.compliance_pct/badges/series_14d[14]), proof file ACL (athlete sees own, other athlete 403, staff sees any), manual approval flow (admin PUT settings -> pending submission appears in /recovery/pending -> approve transitions to approved, reset back to automatic), admin POST /recovery/activities creates custom activity and appears in catalog, non-admin staff (coach@brazillacrosse.com) correctly 403 on create-activity and PUT-settings. Frontend (real Chromium): athlete login (lucas.silva) shows recovery-hero-card on /athlete with live points 305/100, 'Goal Achieved' badge, 1-day streak, green progress bar; /athlete/recovery page renders today-points=265->305 after submit, recovery-streak=1 days, recovery-compliance=57%, last-14-days mini chart (red/orange/yellow/green bars), achievements (Hydration King + Sleep Champion), and today's activity list with 'approved' status entries. Recovery submit dialog opens, exposes 14 activities, accepts PNG via proof-file-input, and submit shows '+40 points Goal achieved!' toast and updates totals (265 -> 305). Admin /staff/recovery page (cristina.velez) shows 'Recovery Admin' with 3 tabs Approvals/Activities/Settings; Approvals tab listed the pending Lucas submission; Activities tab shows 14 default activities grouped Gold/Silver/Bronze with delete buttons and the New Activity button; Settings tab exposes approval-mode-switch (Off=automatic) and daily-target-input=100. 0 page errors / 0 console errors.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Staff Recovery Admin - Activities tab", "issues": ["The 'Silver' category badge chip inside each Silver activity card renders nearly invisible (very light text on light background). Compare to Gold (orange/yellow chip) which is clearly readable. Bronze likely has same issue but not viewed; recommend explicit chip background+foreground per category for contrast."]}
+    ]
+  },
+  "passed_tests": [
+    "BACKEND pytest 12/12: /app/backend/tests/test_recovery.py",
+    "GET /api/recovery/catalog returns 3 default categories with correct points (Gold=40, Silver=25, Bronze=15) and >=14 default activities and settings{approval_mode, daily_target}",
+    "POST /api/recovery/logs (multipart) auto mode -> status=approved, awarded=true, log points match activity",
+    "POST /api/recovery/logs without file -> 422 (proof mandatory)",
+    "GET /api/recovery/today -> points/target/color in {red,orange,yellow,green}/goal_achieved/remaining/streak/logs",
+    "GET /api/recovery/my-summary -> target/streak/compliance.compliance_pct/badges[]/series_14d[14]",
+    "GET /api/recovery/files/{file_id}?auth=<athlete_token> -> 200 image/* for own file",
+    "GET /api/recovery/files/{file_id}?auth=<other_athlete_token> -> 403",
+    "GET /api/recovery/files/{file_id}?auth=<staff_token> -> 200",
+    "PUT /api/recovery/settings approval_mode=manual then POST /api/recovery/logs -> status=pending and listed in GET /api/recovery/pending; POST /api/recovery/logs/{id}/review action=approve -> status=approved; reset back to automatic",
+    "POST /api/recovery/activities (admin) creates custom activity and appears in catalog; coach (non-admin staff) gets 403 on create + PUT settings",
+    "FRONTEND athlete /athlete: data-testid='recovery-hero-card' present, shows 305/100 Goal Achieved + 1-day streak + green progress",
+    "FRONTEND athlete /athlete/recovery: data-testid='recovery-points-page', today-points=265, recovery-streak='1 days', recovery-compliance='57%', 14-day mini chart populated, 2 achievement badges, today's activity list with proof + approved status",
+    "FRONTEND athlete submit dialog: open-recovery-submit-btn -> recovery-submit-dialog opens, 14 activities visible (data-testid=activity-{id}), proof-file-input accepts PNG, submit-recovery-btn -> success toast '+40 points Goal achieved!' and today-points jumps 265 -> 305",
+    "FRONTEND staff /staff/recovery: data-testid='recovery-config-page' present with 3 tabs (Approvals/Activities/Settings); Activities tab shows 14 rows + new-activity-btn; Settings tab shows approval-mode-switch + daily-target-input=100; Approvals tab listed the manual-mode pending submission",
+    "0 JS console errors, 0 page errors during athlete + admin flows"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_recovery.py",
+    "/app/test_reports/pytest/recovery.xml"
+  ],
+  "action_items": [
+    "(Polish) Silver-category chip on /staff/recovery Activities tab has very low contrast - apply a colored background per category (Gold/Silver/Bronze) for readability.",
+    "(Optional) Athlete home doesn't render mobile-bottom-nav on desktop viewport - confirm 'Recovery' bottom-nav entry on small viewport in a future test (menu-recovery-points works correctly via menu list)."
+  ],
+  "critical_code_review_comments": [
+    "recovery_routes.py: review endpoint (/recovery/logs/{id}/review) does not (re)compute or invalidate any cached points - looks fine because points are recomputed per-day via aggregation on each /today call; just noting for awareness.",
+    "recovery_routes.py: proof-serving endpoint accepts JWT in ?auth= query param. Logs/CDN URLs may leak the token in referrer/access logs. Consider short-lived signed URLs or storing token only in fragment/header for production hardening.",
+    "Approval mode reset: tests intentionally reset back to automatic in a finally-block - main agent's smoke test or any failure mid-flow could leave the mode in 'manual'. Confirmed reset succeeded after this run (admin GET /recovery/settings returns automatic + 100)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_recovery.py (new)"
+  ],
+  "success_rate": { "backend": "100% (12/12)", "frontend": "100% on all listed selectors and flows" },
+  "test_credentials": {
+    "admin_staff": "cristina.velez@brasillacrosse.com / 123456",
+    "athlete": "lucas.silva@email.com / demo123",
+    "non_admin_staff": "coach@brazillacrosse.com / staff123"
+  },
+  "seed_data_creation": "Test submitted 2 new recovery logs for Lucas Silva (1 auto-approved 8+ Hours Sleep via API + 1 manual-mode then approved + 1 auto via UI). Did NOT create persistent custom activities (created+cleaned-up TEST_Ice Bath in test_admin_create_custom_activity). Approval mode reset to automatic after tests.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Recovery module is fully functional end-to-end. Backend regression suite: pytest /app/backend/tests/test_recovery.py (needs REACT_APP_BACKEND_URL env exported or pulled from frontend/.env). Key data-testids verified: recovery-hero-card, recovery-points-page, today-points, recovery-streak, recovery-compliance, open-recovery-submit-btn, recovery-submit-dialog, activity-{id}, proof-file-input, submit-recovery-btn, recovery-config-page, approval-mode-switch, daily-target-input, new-activity-btn, menu-recovery-points. Tabs in /staff/recovery are plain buttons with text 'Approvals'/'Activities'/'Settings' (no role=tab), use text selector. The 14 default activities are split as Gold(2): 8+ Hours Sleep, Hydration Goal Achieved | Silver(>=7): Massage, Foam Rolling, Mobility Session, Bike Recovery, Pool Recovery, Stretching, ... | Bronze: not viewed but expected ~5. Approval mode currently = automatic, daily_target = 100. No splash trap observed.",
+  "rca of the issue": "No bugs to RCA. The only design nit (Silver-category chip contrast) is a CSS-only fix in /app/frontend/src/pages/staff/RecoveryConfig.js where the category badge is rendered."
+}

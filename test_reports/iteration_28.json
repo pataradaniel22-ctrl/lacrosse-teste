@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only end-to-end verification of 'The Fittest' (Phase-1) on ATHLETE and ADMIN. All 13 acceptance criteria PASS. Athlete: home card visible, /athlete/the-fittest page loads with my-score/my-rank/tab bar; filter chips work; Publish disabled without photo (NO-PHOTO rule); Lucas (has training today) publishing a training_checkin with photo → success, score 0→1, first post shows +1 badge, points_awarded=1; DEDUPE verified (second publish keeps score at 1); Pedro (no training today) publishes with photo → post created, score stays 0, no +1 badge; reactions (emoji picker) and comments (add/send) both work and update counts; Leaderboard tab lists all 16 athletes combined (both teams), the logged-in athlete row highlighted with '(You)'. Admin: /staff → menu → the-fittest-admin-nav-btn navigates to /staff/the-fittest; 5 tabs present (Overview, Challenges, Feed, Ranking, Reports [data-testid=admin-tab-reported]); Overview stat cards (Participants=16, Posts today=3, Training pts=1) and Top10 render correctly; New Challenge form saves 'TEST_ Auto Challenge' and appears in Challenges list; Feed moderation Hide→prompt reason→200 OK, post removed (3→2); Finish Challenge fires POST /admin/challenges/{id}/finish 200 and shows winner toast 'Winner: Lucas Silva (1 pts)', challenge status becomes 'finished'. 0 console errors during flows.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/fittest/photo", "issue": "Rejects very small PNGs (10x10) with HTTP 400 'Could not process image' — likely PIL/thumbnail path. Not a real product bug (real photos are always > threshold) but consider returning a clearer message like 'Image is too small (min 128px)'."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Athlete Home first load", "issue": "InstallAppModal (PWA banner) overlays the-fittest-home-card and can block a plain click; testing had to pre-set localStorage['bl_install_modal_dismissed']='true' or press 'Got it' first. Not a bug per se, just UX friction for the very first visit.", "affected_selectors": ["the-fittest-home-card"]},
+      {"flow": "Create Post (Pedro / no-training-today)", "issue": "Eligibility hint text expected to explicitly say 'No training logged today' but was not found in the modal text for Pedro when checked (post-scoring correctly returned 0 pts). Worth confirming GET /api/fittest/eligibility returns has_training_today=false for pedro.santos today; if it does, the hint copy is fine, if not then the eligibility endpoint may be misclassifying.", "affected_selectors": ["create-post-modal"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Verify /api/fittest/eligibility returns has_training_today=false for pedro.santos@email.com so the modal shows the '• No training logged today yet' hint.",
+    "Consider dismissing the PWA install modal automatically once during a session so a first-tap on 'The Fittest' card is not intercepted."
+  ],
+  "critical_code_review_comments": [
+    "the_fittest_routes.py:456 raises 400 'Could not process image' when _make_lowres returns None — return a clearer HTTP 415/422 with a min-size hint to help clients diagnose.",
+    "TheFittestAdmin.js: the Reports tab uses data-testid='admin-tab-reported' while the review request calls it 'Reports'. Consider renaming to 'admin-tab-reports' for consistency (label already says 'Reports').",
+    "TheFittest.js:79 fires POST /fittest/mark-viewed inside the initial useEffect on every mount — this is fine but should be guarded to only fire when there is an active challenge (currently fires even when challenge=null)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend scope)", "frontend": "100% of 13 acceptance criteria PASS"},
+  "test_credentials": "Admin: cristina.velez@brasillacrosse.com / 123456. Athlete-with-training: lucas.silva@email.com / demo123 (Men). Athlete-without-training: pedro.santos@email.com / demo123 (Men). All confirmed live during this run.",
+  "seed_data_creation": "During UI test created: 3 posts under 'The Fittest Camp Challenge' (Lucas TEST_ lucas auto scoring +1, Lucas TEST_ dupe attempt dedupe=0, Pedro TEST_ pedro nt no-training=0), 1 reaction and 1 comment on Lucas' post, 1 admin challenge 'TEST_ Auto Challenge'. 'The Fittest Camp Challenge' was moved to status=finished by the Finish flow test — main agent may want to reopen/reseed it or leave as-is.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All UI test-ids match the review request. Admin 'Reports' tab is data-testid='admin-tab-reported' (not 'admin-tab-reports'). If retesting, remember The Fittest Camp Challenge is now 'finished' — either create a fresh active one via 'new-challenge-btn' or select 'TEST_ Auto Challenge · active' from challenge-selector (already exists from this run). Use a real-sized JPG (~600x400) for photo upload; the 10x10 PNG path returns 400. To bypass the PWA install modal in Playwright, execute localStorage.setItem('bl_install_modal_dismissed','true') before login or click 'Got it'.",
+  "rca of the issue": "n/a — no critical bugs found in the tested feature."
+}

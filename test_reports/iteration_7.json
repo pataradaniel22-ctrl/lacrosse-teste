@@ -1,0 +1,66 @@
+{
+  "summary": "Tested PWA Web Push notification implementation (backend /api/push/* + scheduler + frontend NotificationSettings). 16/16 backend pytest cases passed. Frontend: bell icon on AthleteHome navigates to /athlete/notifications, NotificationSettings page renders with 'Ativar notificações' button when no subscription, iOS detection card correctly hidden on non-iOS UA. Scheduler verified: APScheduler starts at boot, logs 'Push reminder scheduler started (1-min interval)' and ticks every 60s. Direct invocation of _check_and_send_reminders(db) executes cleanly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "GET /api/push/vapid-public-key returns 200 + public_key string (no auth required, ~87 chars base64url)",
+    "GET /api/push/preferences without auth -> 401/403",
+    "GET /api/push/preferences as staff -> 403 'Athletes only'",
+    "POST /api/push/subscribe as staff -> 403",
+    "DELETE /api/push/unsubscribe as staff -> 403",
+    "POST /api/push/test as staff -> 403",
+    "GET /api/push/preferences for athlete with no subscription returns {subscribed:false, enabled:false, morning_time:08:00, evening_time:21:00, timezone:America/Sao_Paulo}",
+    "POST /api/push/test returns 400 when no subscription exists",
+    "PUT /api/push/preferences returns 400 when no subscription exists",
+    "POST /api/push/subscribe with fake-but-well-formed endpoint stores doc, returns subscribed:true. GET reflects subscribed:true + enabled:true + default times",
+    "POST /api/push/subscribe a second time with different endpoint replaces (no duplicate)",
+    "PUT /api/push/preferences with morning_time=07:30, evening_time=20:00 persists; GET returns updated values",
+    "PUT /api/push/preferences with enabled:false toggles enabled flag while keeping subscribed:true",
+    "PUT /api/push/preferences with morning_time='7:30' -> 422 (Pydantic regex)",
+    "PUT /api/push/preferences with morning_time='abc' -> 422 (Pydantic regex)",
+    "DELETE /api/push/unsubscribe returns {success:true, deleted:>=1}; subsequent GET returns subscribed:false",
+    "Scheduler boot log confirmed in /var/log/supervisor/backend.err.log: 'Push reminder scheduler started (1-min interval)' + 1-min ticks observed",
+    "Direct call of _check_and_send_reminders(db) executes without error",
+    "Frontend AthleteHome: data-testid='notifications-btn' bell icon present, navigates to /athlete/notifications (force-click after toast clears)",
+    "Frontend NotificationSettings: data-testid='notification-settings' renders, header 'Notificações' / 'Lembretes de check-in'",
+    "Frontend: 'Ativar notificações' button (data-testid='enable-push-btn') visible and enabled on first visit",
+    "Frontend: iOS install card hidden on non-iOS UA (browser is Chromium)",
+    "Frontend: Permission info shown (denied in headless browser as expected)",
+    "service-worker.js parses push event payload {title, body, url, tag} and calls showNotification; notificationclick navigates to data.url - verified by code review"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_push_notifications.py",
+    "/app/test_reports/pytest/push_notifications.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "push_routes.py L256: find_one() for update_preferences does NOT exclude _id projection like other queries do. Not a bug (result unused), but inconsistent.",
+    "push_routes.py L92 scheduler reads subs in-memory each minute; for production scale, consider indexing push_subscriptions by athlete_id + a TTL index for stale subs.",
+    "push_routes.py defaults dict at L229-233 mixes 'enabled' default; on re-subscribe it preserves existing 'enabled' which is the correct intent — good. But callers calling /push/subscribe after disable will re-enable=False (preserving previous state) — verified test_subscribe_twice_replaces_no_duplicate keeps this behavior.",
+    "Frontend NotificationSettings.js L138 savePrefs guards on subscribed but does NOT debounce time input onBlur — fast onChange+onBlur cycles can hammer the API; consider debouncing or only-on-change.",
+    "service-worker.js: client.navigate() inside notificationclick may fail silently when target origin differs; current .catch(()=>{}) hides errors. Acceptable for in-app URLs."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_push_notifications.py"
+  ],
+  "success_rate": {
+    "backend": "100% (16/16)",
+    "frontend": "100% (navigation + render + iOS gating verified; permission flow not testable in headless)"
+  },
+  "test_credentials": {
+    "admin_staff": "cristina.velez@brasillacrosse.com / 123456",
+    "athlete": "ana.oliveira@email.com / demo123"
+  },
+  "seed_data_creation": "Push subscription docs created and cleaned up per-test-module via autouse fixture (athlete ana.oliveira). No persistent test data left behind.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Push notifications: backend endpoints are /api/push/{vapid-public-key,preferences,subscribe,unsubscribe,test}. Scheduler runs every 1 min in UTC (job id 'push_reminders') and reads each sub's timezone to compute local HH:MM match. Dedup via push_send_log collection (athlete_id+kind+date). Fake subscribe is OK for storing docs (FCM endpoint format), but /api/push/test requires a real browser-issued subscription. Headless Playwright cannot grant Notification.permission so subscribe-flow E2E from UI is NOT testable — only the page render/navigation. Use REACT_APP_BACKEND_URL env var when running pytest (it does NOT auto-load /app/frontend/.env). MUST export it explicitly: REACT_APP_BACKEND_URL=https://performance-fueling.preview.emergentagent.com pytest ...",
+  "rca of the issue": "No bugs found. Minor observation: on AthleteHome, the welcome toast intercepts the first click on the bell icon for ~3-5s post-login; users should still get a working click on the second attempt or after toast auto-dismisses. Tests confirm bell click works after wait_for_timeout(5000) to let toast clear."
+}

@@ -1,0 +1,40 @@
+{
+  "summary": "Frontend-only verification of Staff Dashboard date pickers (radar/pain/menstrual) and reactivated load charts (EVENT_MODE=false). Logged in as cristina.velez@brasillacrosse.com. All three date-picker calendar popovers open, allow picking a past date, correctly update their date captions, and disable future dates. All previously hidden !EVENT_MODE load charts now render across Short/Medium/Long Term tabs with seeded demo data and zero console/page errors. Training Load Monitoring 7d/14d/28d selector, team filter (All Teams → Women's → All Teams) and player filter regression all clean.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_17.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "StaffDashboard.js is 2306 lines - large single file; consider splitting into per-tab sub-components for maintainability (not blocking).",
+    "DatePickerPopover uses bostonTodayStr() but 'disabled={(date) => date > new Date()}' uses local browser Date instead of Boston-today. In edge cases (e.g. late-evening browser in Asia) 'tomorrow Boston' could still be clickable and produce negative days_ago. Backend appears to accept days_ago freely; consider clamping to Boston today or clamping days_ago to >=0.",
+    "The '📅' caption near the Menstrual panel currently renders as an emoji-only text node ('🌸') followed by another node with '📅 2026-07-14'; consider making one combined caption to match the readiness/pain panel format for consistency.",
+    "Radar and pain panels expose quick buttons (Today/Yest/2d–6d) alongside the new Date button — verify design intent (both are present as expected per spec)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested", "frontend": "100%"},
+  "test_credentials": "cristina.velez@brasillacrosse.com / 123456",
+  "seed_data_creation": "None - used existing seeded demo data (~12 days).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Staff Dashboard has 3 date-picker triggers: data-testid radar-date-picker, pain-date-picker, menstrual-date-picker. All open a react-day-picker calendar (button[name='day']) with future-date disabled. Load charts live in three tabs (Short/Medium/Long Term). Demo data covers ~12 recent days; picking older dates shows 'no data' captions (expected).",
+  "test_evidence": {
+    "radar_caption_after_pick_7d_ago": "📅 2026-07-10 • 👥 15/16 checked in",
+    "pain_caption_after_pick_5d_ago": "📅 2026-07-12 • 0 pain reports from 7 sessions",
+    "menstrual_caption_after_pick_3d_ago": "🌸 / 📅 2026-07-14 (In Period 0, Severe Pain 0)",
+    "future_date_disabled": true,
+    "load_charts_short_term": ["Daily Internal Load by Athlete", "Team Daily Readiness Profile", "Daily Pain by Body Region", "Training Load Monitoring", "Weekly Training Consistency"],
+    "load_charts_medium_term": ["ACWR by Athlete", "Monotony vs Strain / weekly workload metrics", "Pain After Sessions by Athlete"],
+    "load_charts_long_term": ["Monthly Cumulative Load (AU)", "Chronic Load Trend (28-day Rolling)", "Weekly Training Consistency", "Pain by Body Region (90 days)"],
+    "training_load_monitoring_selectors": "7d/14d/28d all clickable and refresh data",
+    "team_filter_regression": "All Teams -> Women's Team -> All Teams works cleanly",
+    "console_errors": 0,
+    "page_errors": 0,
+    "react_error_overlay": false
+  }
+}

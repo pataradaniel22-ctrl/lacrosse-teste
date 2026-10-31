@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8" />
+        
+        <!-- PWA Essential Meta Tags -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="theme-color" content="#0a0a0a" />
+        <meta name="background-color" content="#0a0a0a" />
+        <meta name="description" content="Brasil Lacrosse - Sistema de Monitoramento de Atletas" />
+        
+        <!-- iOS PWA Meta Tags -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Athlete Pulse" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        
+        <!-- Prevent phone number detection -->
+        <meta name="format-detection" content="telephone=no" />
+        
+        <!-- Icons -->
+        <link rel="icon" type="image/png" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        
+        <!-- Splash Screens for iOS (optional but nice) -->
+        <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        
+        <!-- Manifest -->
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        
+        <!-- Preconnect for performance -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        
+        <title>Athlete Pulse | Brasil Lacrosse</title>
+        <!-- Theme bootstrap (dark blue default, no flash) -->
+        <script>
+            (function () {
+                try {
+                    var t = localStorage.getItem('bl_theme');
+                    if (t === null) t = 'dark';
+                    if (t === 'dark') document.documentElement.classList.add('dark');
+                } catch (e) {
+                    document.documentElement.classList.add('dark');
+                }
+            })();
+        </script>
+
+        
+        <!-- PWA Styles for standalone mode -->
+        <style>
+            /* Safe area insets for notched devices */
+            :root {
+                --sat: env(safe-area-inset-top);
+                --sar: env(safe-area-inset-right);
+                --sab: env(safe-area-inset-bottom);
+                --sal: env(safe-area-inset-left);
+            }
+            
+            /* Prevent pull-to-refresh on mobile */
+            html, body {
+                overscroll-behavior-y: contain;
+            }
+            
+            /* Hide scrollbars on mobile for native feel */
+            @media (max-width: 768px) {
+                ::-webkit-scrollbar {
+                    display: none;
+                }
+                * {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            }
+            
+            /* Padding for safe areas */
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+                padding-right: env(safe-area-inset-right);
+            }
+            
+            /* Prevent text selection for native feel */
+            .no-select {
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+            
+            /* Smooth touch scrolling */
+            .smooth-scroll {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Loading screen */
+            #app-loading {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #0a0a0a;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 99999;
+            }
+            
+            #app-loading.hidden {
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            
+            #app-loading img {
+                width: 80px;
+                height: 80px;
+                animation: pulse 1.5s ease-in-out infinite;
+            }
+            
+            #app-loading p {
+                margin-top: 16px;
+                color: #a1a1aa;
+                font-family: system-ui, -apple-system, sans-serif;
+                font-size: 14px;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.7; transform: scale(0.95); }
+            }
+        </style>
+        
+        <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <script>
+            // Only load visual edit scripts when inside an iframe
+            if (window.self !== window.top) {
+                var debugMonitorScript = document.createElement('script');
+                debugMonitorScript.src = 'https://assets.emergent.sh/scripts/debug-monitor.js';
+                document.head.appendChild(debugMonitorScript);
+
+                window.tailwind = window.tailwind || {};
+                tailwind.config = {
+                    corePlugins: { preflight: false },
+                };
+
+                var tailwindScript = document.createElement('script');
+                tailwindScript.src = 'https://cdn.tailwindcss.com';
+                document.head.appendChild(tailwindScript);
+            }
+        </script>
+    </head>
+    <body>
+        <!-- Native-like loading screen -->
+        <div id="app-loading">
+            <img src="%PUBLIC_URL%/brazil-lacrosse-logo.png" alt="Loading" />
+            <p>Carregando...</p>
+        </div>
+        
+        <noscript>Você precisa habilitar JavaScript para usar este aplicativo.</noscript>
+        <div id="root"></div>
+        
+        <script>
+            // Hide loading screen as soon as React mounts into #root.
+            // Robust: does NOT depend solely on window 'load' (which can hang on slow
+            // external scripts). Triggers on React mount, window load, or a fallback timeout.
+            (function () {
+                var hidden = false;
+                function hideLoading() {
+                    if (hidden) return;
+                    hidden = true;
+                    var loading = document.getElementById('app-loading');
+                    if (loading) {
+                        loading.classList.add('hidden');
+                        setTimeout(function () { if (loading) loading.remove(); }, 300);
+                    }
+                    if (observer) observer.disconnect();
+                }
+
+                // 1) Hide when React renders content into #root
+                var root = document.getElementById('root');
+                var observer = null;
+                if (root && window.MutationObserver) {
+                    observer = new MutationObserver(function () {
+                        if (root.childElementCount > 0) hideLoading();
+                    });
+                    observer.observe(root, { childList: true, subtree: false });
+                    // In case React already mounted before observer attached
+                    if (root.childElementCount > 0) hideLoading();
+                }
+
+                // 2) Hide on window load (small delay for smoothness)
+                window.addEventListener('load', function () {
+                    setTimeout(hideLoading, 400);
+                });
+
+                // 3) Hard fallback so the splash NEVER traps the user
+                setTimeout(hideLoading, 4000);
+            })();
+            
+            // Register Service Worker for offline capability
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(function(registration) {
+                            console.log('SW registered: ', registration);
+                        })
+                        .catch(function(error) {
+                            console.log('SW registration failed: ', error);
+                        });
+                });
+            }
+        </script>
+        
+                <script>
+            !(function (t, e) {
+                var o, n, p, r;
+                e.__SV ||
+                    ((window.posthog = e),
+                    (e._i = []),
+                    (e.init = function (i, s, a) {
+                        function g(t, e) {
+                            var o = e.split(".");
+                            2 == o.length && ((t = t[o[0]]), (e = o[1])),
+                                (t[e] = function () {
+                                    t.push(
+                                        [e].concat(
+                                            Array.prototype.slice.call(
+                                                arguments,
+                                                0,
+                                            ),
+                                        ),
+                                    );
+                                });
+                        }
+                        ((p = t.createElement("script")).type =
+                            "text/javascript"),
+                            (p.crossOrigin = "anonymous"),
+                            (p.async = !0),
+                            (p.src =
+                                s.api_host.replace(
+                                    ".i.posthog.com",
+                                    "-assets.i.posthog.com",
+                                ) + "/static/array.js"),
+                            (r =
+                                t.getElementsByTagName(
+                                    "script",
+                                )[0]).parentNode.insertBefore(p, r);
+                        var u = e;
+                        for (
+                            void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
+                                u.people = u.people || [],
+                                u.toString = function (t) {
+                                    var e = "posthog";
+                                    return (
+                                        "posthog" !== a && (e += "." + a),
+                                        t || (e += " (stub)"),
+                                        e
+                                    );
+                                },
+                                u.people.toString = function () {
+                                    return u.toString(1) + ".people (stub)";
+                                },
+                                o =
+                                    "init me ws ys ps bs capture je Di ks register register_once register_for_session unregister unregister_for_session Ps getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty Es $s createPersonProfile Is opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing Ss debug xs getPageViewId captureTraceFeedback captureTraceMetric".split(
+                                        " ",
+                                    ),
+                                n = 0;
+                            n < o.length;
+                            n++
+                        )
+                            g(u, o[n]);
+                        e._i.push([i, s, a]);
+                    }),
+                    (e.__SV = 1));
+            })(document, window.posthog || []);
+            posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
+                api_host: "https://us.i.posthog.com",
+                person_profiles: "identified_only",
+            });
+        </script>
+    </body>
+</html>

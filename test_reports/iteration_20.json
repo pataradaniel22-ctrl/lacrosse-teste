@@ -1,0 +1,47 @@
+{
+  "summary": "Phase 4 (Combined Load x Health, Offline Weekly Health, Health PDF Reports) fully verified end-to-end. Backend: 12/12 pytest passed covering combined-risk shape+staff-only+AND logic, offline idempotency (same client_submission_id -> duplicate:true + same submission_id; different csid -> new), team/athlete PDF (200 + %PDF-, 404 for unknown, 403 for athlete), ACWR regression (workload has weekly_monotony/weekly_strain but no acwr; availability components has load_balance but no acwr; removed /api/staff/dashboard/acwr and /api/staff/athlete/{id}/acwr-gabbett both 404). Frontend: Staff Dashboard combined-risk-card renders with 2 flagged athletes (Rafael Oliveira, Diego Almeida) — combined-risk-<id> click navigates to /staff/athlete/<id>. /staff/health team-health-report-btn triggers GET /api/health/staff/report/team -> 200. Opening a health-row-<id> modal exposes athlete-health-report-btn which triggers GET /api/health/staff/report/athlete/{id} -> 200. Athlete offline flow (mobile viewport, lucas.silva): going offline shows health-sync-status banner; answering Q1='a' finalizes with no_problem=true and reaches health-done showing 'Saved on Your Device'; localStorage bl_health_pending is populated with client_submission_id and NO POST fires while offline; going online fires POST /api/health/submit -> 200 and queue is cleared. Re-triggering 'online' with empty queue fires no additional POSTs. Re-injecting the identical payload to simulate a stale queue is deduplicated by backend (returns duplicate:true).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Offline reconnect sync",
+        "issue": "On reconnect, flushPending is invoked twice concurrently — once by the 'online' event handler (goOnline in useEffect) and once by useEffect re-run — causing 2 POST /api/health/submit for a single queued item. Not a functional bug: backend idempotency via client_submission_id keeps DB clean and the 2nd request returns duplicate:true. Consider guarding flushPending with an in-flight ref/lock to avoid the harmless-but-wasteful duplicate request.",
+        "affected_selectors": ["health-sync-status"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Staff Dashboard (charts)",
+        "issues": ["Recharts warning 'width(-1) and height(-1) of chart should be greater than 0' fired multiple times on initial load. Non-blocking, but indicates a ResponsiveContainer parent has 0 size at first paint (pre-existing, not from this iteration)."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_health_phase4.py",
+    "/app/test_reports/pytest/health_phase4.xml"
+  ],
+  "action_items": [
+    "(Optional) In WeeklyHealthCheck.js flushPending, add an in-flight guard (useRef flag) so concurrent invocations from the online listener and useEffect do not both iterate the queue. Backend idempotency already makes this safe, but it saves a duplicate POST per queued item."
+  ],
+  "critical_code_review_comments": [
+    "health_routes.py submit_health_check idempotency (line 216-225): correctly returns existing submission_id + duplicate:true when (athlete_id, client_submission_id) matches. Good.",
+    "health_routes.py staff_combined_risk (line 568-571): threshold = mean+1sd when n>=3, else mean*1.3; high_load requires total_load>0 AND >threshold — correct (prevents flagging athletes with no sessions). combined_risk = high_load AND elevated_health — matches spec.",
+    "health_routes.py combined-risk sort key (line 603): (combined_risk, high_load, elevated_health, total_load) desc — combined-risk athletes surface first, correct.",
+    "health_routes.py team/athlete PDF endpoints return StreamingResponse with Content-Disposition attachment — correct. 404 for unknown athlete, 403 via _require_staff — correct.",
+    "WeeklyHealthCheck.js flushPending: for-of loop awaits each POST sequentially per invocation, which is good. However, the useEffect at line 82-92 both attaches goOnline listener AND calls flushPending() on mount. If the effect re-runs (getAuthHeaders identity changes), a second flush can race the online-triggered flush. Suggest useRef flag: `if (flushingRef.current) return; flushingRef.current = true; ... finally { flushingRef.current = false; }`. Backend idempotency masks this today.",
+    "WeeklyHealthCheck.js line 57-63: permanent 4xx (except 409) drops the queued item to prevent infinite retry — sensible.",
+    "StaffDashboard.js combined-risk-card renders correctly with data-testid; flagged rows use data-testid=combined-risk-<athlete_id> and clicking navigates. Good.",
+    "HealthSurveillance.js downloadReport uses fetch with Authorization header + blob URL — good; team-health-report-btn and athlete-health-report-btn wired correctly."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_health_phase4.py (new)"
+  ],
+  "success_rate": {"backend": "100% (12/12)", "frontend": "100% (staff dashboard combined-risk, staff health PDFs, athlete offline queue+sync)"},
+  "test_credentials": "Staff: cristina.velez@brasillacrosse.com / 123456. Athlete: lucas.silva@email.com / demo123.",
+  "seed_data_creation": "None. Only test-scoped health submissions from lucas.silva were created via offline flow (auto-synced). All csids prefixed TEST_ in backend pytest.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 4 features verified. Backend regression suite is at /app/backend/tests/test_health_phase4.py. Playwright offline testing pattern used: page.context.set_offline(True/False) + explicit window.dispatchEvent(new Event('offline'|'online')) since Playwright's set_offline does not always fire the browser online/offline events. Queue key: localStorage['bl_health_pending']. Do NOT rely solely on set_offline — always dispatch the event too.",
+  "rca of the issue": "n/a — no functional bugs. Minor observation: duplicate POST on reconnect is silently masked by client_submission_id idempotency (backend correctly returns duplicate:true and the DB stays clean); a useRef in-flight lock in flushPending would remove the redundant network call."
+}

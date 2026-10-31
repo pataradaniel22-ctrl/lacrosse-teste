@@ -1,0 +1,61 @@
+{
+  "summary": "Phase 2 Recovery + Readiness-radar bug-fix verification. Backend: NEW pytest suite /app/backend/tests/test_recovery_phase2.py PASSES 9/9 - Yoga (Silver,25) exists; POST /api/recovery/logs WITHOUT file returns 200 status=approved has_proof=false (no file_id); WITH file still returns has_proof=true; two consecutive Yoga submissions both approved and today_points increases by 2x25; GET /api/recovery/staff/overview returns full payload for default/14d, ?days=7 (heatmap+trends.daily length=7), ?days=30 (length=30), and ?team=Brazil Lacrosse Men; GET /api/staff/dashboard/readiness-radar returns athletes_count>0 with 5 dimensions (Sleep Quality, Energy Level, Muscle Recovery, Mental Wellness, Readiness to Train). Frontend (real Chromium, cristina.velez): Staff Dashboard /staff renders the Team Daily Readiness Profile section with all 5 dimensions in text and filled radar polygons (no empty-state). Header 'Recovery' button (data-testid='recovery-intel-nav-btn') present and navigates to /staff/recovery-intelligence. RecoveryIntelligence page renders ALL 12 required data-testid selectors: recovery-intelligence-page, ri-kpis (Avg=72.5/100, Compliance=34%, Above=6/16, Below=10/16, Streak leader=Lucas Silva 3, Pending=0), ri-alerts (12 entries, red+orange+yellow severities visible), ri-heatmap (16 athletes x 14 days color-coded cells with point values), ri-trend-chart (Daily Team Recovery bar chart), ri-category-chart (pie), ri-leaderboard (17 rows, Lucas Silva 1680/120 avg/streak 3 on top, Diego Almeida #2 1415, Beatriz Santos #3 1370), ri-scatter-readiness, ri-scatter-pain, ri-team-filter, ri-days-filter, ri-admin-btn (clicking navigates to /staff/recovery as expected). Athlete (lucas.silva) /athlete/recovery: today-points=300 -> click open-recovery-submit-btn -> Silver tab shows 15 activities including Yoga +25 -> click Yoga -> click submit-recovery-btn (NO file uploaded) -> success toast '+25 points! Goal achieved!' shown, today-points = 325 (300+25). Repeat same flow with Yoga -> success, today-points = 350 (325+25). Today's Activities list shows TWO Yoga (Silver, +25, approved) entries within the same day plus 8+ Hours Sleep, proving multiple submissions per day allowed. 0 page errors, 0 console errors (only benign Recharts width/height warnings during initial mount and a Radix DialogContent aria-describedby warning).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Recovery submit dialog", "issues": ["The dialog body text does not literally contain the string 'Proof (optional)' that the review_request expected - the label is rendered differently (still optional in behavior - submit without file succeeds). Cosmetic only; spec wording suggestion: render label exactly as 'Proof (optional)' for clarity."]},
+      {"screen": "RecoveryIntelligence", "issues": ["Recharts logs many 'width(-1) height(-1)' warnings on initial mount before container sizes settle (likely double-render in dev mode) - no visual impact."]},
+      {"screen": "Recovery submit dialog (a11y)", "issues": ["Radix DialogContent missing aria-describedby - add a DialogDescription for screen-reader compliance."]}
+    ]
+  },
+  "passed_tests": [
+    "BACKEND pytest 9/9: /app/backend/tests/test_recovery_phase2.py",
+    "GET /api/recovery/catalog -> Yoga present, category=Silver, points=25",
+    "POST /api/recovery/logs WITHOUT file -> 200, status=approved, has_proof=false, no file_id",
+    "POST /api/recovery/logs WITH file -> 200, has_proof=true, file_id present",
+    "Two consecutive Yoga POSTs -> both approved; today.points increases by 2x activity.points",
+    "GET /api/recovery/staff/overview -> kpis (7 fields), alerts (severity in red/orange/yellow + message), leaderboard (rank/name/total_points/avg_points/streak/compliance_pct), heatmap {dates[14], rows[].cells[14]={date,points,color}}, trends.daily[14] + category_breakdown[], relationships.recovery_vs_readiness/pain arrays",
+    "?days=7 -> heatmap.dates.length=7, trends.daily.length=7",
+    "?days=30 -> heatmap.dates.length=30, trends.daily.length=30",
+    "?team=Brazil Lacrosse Men -> kpis.total_athletes>=1, leaderboard non-empty",
+    "GET /api/staff/dashboard/readiness-radar -> athletes_count>0, radar_data has 5 dims (Sleep Quality, Energy Level, Muscle Recovery, Mental Wellness, Readiness to Train)",
+    "FRONTEND /staff Team Daily Readiness Profile renders all 5 dimensions in DOM (no empty-state)",
+    "FRONTEND data-testid='recovery-intel-nav-btn' present on /staff and navigates to /staff/recovery-intelligence",
+    "FRONTEND /staff/recovery-intelligence: all 12 data-testids present (recovery-intelligence-page, ri-kpis, ri-alerts, ri-heatmap, ri-trend-chart, ri-category-chart, ri-leaderboard, ri-scatter-readiness, ri-scatter-pain, ri-team-filter, ri-days-filter, ri-admin-btn)",
+    "FRONTEND ri-leaderboard rendered 17 rows; KPIs populated (Avg=72.5/Compliance=34%/Above=6/Below=10/Streak Lucas Silva 3/Pending=0); Alerts panel shows 12 items with red+orange+yellow severities",
+    "FRONTEND ri-admin-btn navigates to /staff/recovery (admin page)",
+    "FRONTEND /athlete/recovery: Yoga visible in Silver tab with +25; submit WITHOUT file succeeds; today-points 300->325 and toast '+25 points! Goal achieved!'",
+    "FRONTEND multiple submissions same day: today-points 325->350 after second Yoga; Today's Activities list shows two Yoga entries within the same minute"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_recovery_phase2.py",
+    "/app/test_reports/pytest/recovery_phase2.xml",
+    "/app/backend/tests/test_recovery.py"
+  ],
+  "action_items": [
+    "(Cosmetic) Render the proof field label literally as 'Proof (optional)' in RecoverySubmitDialog so users see the optional indicator (functionality already correct).",
+    "(A11y/Polish) Add a DialogDescription/aria-describedby to the recovery submit Radix DialogContent to silence the React warning and improve SR support.",
+    "(Polish) Ensure Recharts ResponsiveContainer parents have explicit min height to remove 'width(-1) height(-1)' warnings on first mount of RecoveryIntelligence."
+  ],
+  "critical_code_review_comments": [
+    "Recovery overview endpoint correctly slices last N days based on ?days and supports team filter; consider adding response caching (5-10s) for staff overview since it runs aggregations across all athletes - may matter as athlete count grows.",
+    "Multiple-submissions per day: ensure /api/recovery/today aggregation now uses SUM (not last) for repeated activity ids; verified empirically (300+25+25=350), but recommend a comment in the aggregation pipeline noting the deliberate non-dedupe semantics.",
+    "RecoveryIntelligence.js uses several useEffect data-fetches without dependency cleanup - if a user changes ri-team-filter or ri-days-filter rapidly, in-flight requests can race; consider AbortController to cancel stale fetches.",
+    "Readiness-radar bug fix: rely on demo-seeded data for 'today'. Add a backend safeguard so the endpoint never returns empty arrays for athletes_count>0 (return zero-vector entries instead) to keep the UI rendering predictable."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_recovery_phase2.py (new, 9 tests, all passing)"
+  ],
+  "success_rate": { "backend": "100% (9/9 phase2 + 12/12 phase1 regression preserved)", "frontend": "100% on all listed selectors and flows" },
+  "test_credentials": {
+    "admin_staff": "cristina.velez@brasillacrosse.com / 123456",
+    "athlete": "lucas.silva@email.com / demo123"
+  },
+  "seed_data_creation": "Submitted 4 new recovery logs for Lucas Silva via API tests (Yoga x2 no-file, one default activity no-file, one with file) + 2 Yoga logs via UI (no file). Lucas Silva today points = 350 with Yoga x2 + 8+ Hours Sleep entries visible. approval_mode remained 'automatic' (no manual-mode toggling done in phase2 suite).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Phase 2 changes are fully working. Regression suites: pytest /app/backend/tests/test_recovery.py (12 tests) + pytest /app/backend/tests/test_recovery_phase2.py (9 tests). Need REACT_APP_BACKEND_URL exported. Key new data-testids on staff: recovery-intel-nav-btn (StaffDashboard header), recovery-intelligence-page, ri-kpis, ri-alerts, ri-heatmap, ri-trend-chart, ri-category-chart, ri-leaderboard, ri-scatter-readiness, ri-scatter-pain, ri-team-filter, ri-days-filter, ri-admin-btn. Recovery submit dialog now permits empty proof; activities increased to 15 with Yoga (Silver,+25). Today-points aggregation correctly sums duplicate same-day submissions. Login: unified /login form (DO NOT click the 'Register as Staff' link by mistake when looking for a 'Staff' tab).",
+  "rca of the issue": "No outstanding bugs to RCA. Cosmetic deviation only: proof label literal string. Behavior correct."
+}

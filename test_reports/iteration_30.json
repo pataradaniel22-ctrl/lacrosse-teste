@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend-only UI testing of 'The Fittest' multi-session compose modal for athlete lucas.silva@email.com. All requested flows PASS. Training picker (data-testid=training-picker) lists TODAY's 2 sessions from GET /api/fittest/my-trainings-today: 'Strength · 07:30' (60min RPE6 Load360) and 'Conditioning · 17:30' (45min RPE7 Load315), each as training-option-<id>. Initially both selectable, first-open pre-selected with orange highlight + ✓. Recovery-summary hidden while post-type=training_checkin. POST FLOW 1: selected Strength session, uploaded /tmp/test1.jpg (800x600 random RGB), Publish succeeded (info toast 'This training check-in has already been counted for The Fittest.' because Lucas already had max 1 training point today from iter29 — expected per spec). BLOCK RE-POST: reopened modal, Strength option now shows 'Posted' badge + disabled=True; Conditioning still selectable. POST FLOW 2: selected Conditioning, uploaded /tmp/test2.jpg (800x600 solid blue), Publish succeeded. FINAL: both options now show Posted + disabled=True, publish-post-btn is disabled (no selectable session). RECOVERY SUMMARY: switching post-type-recovery reveals data-testid=recovery-summary with 'TODAY'S RECOVERY  INCOMPLETE  60 / 100' progress bar + note 'Recovery must reach 100/100 to earn the recovery point. You can still post it.' — matches spec exactly. REGRESSION: Fittest feed still loads (visible Bruno Ferreira training_checkin card '+1' with photo and caption), leaderboard shows challenge stats (Points/Rank/#Athletes = 1/#7/16). No console errors during flows; only cosmetic Radix DialogContent aria-describedby warnings.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "CreatePostModal", "issues": ["Radix warning: 'Missing Description or aria-describedby={undefined} for {DialogContent}' — accessibility a11y warning, non-blocking."]},
+      {"screen": "CreatePostModal", "issues": ["Sonner toast after publish overlays the floating open-create-post-btn (FAB) for ~5s, preventing rapid reopen of modal. Consider auto-reopening the modal after publish or positioning the toast so it does not intercept the FAB."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CreatePostModal fetches /fittest/my-trainings-today only in useEffect on mount — after publishing, the modal closes; on next mount it correctly re-fetches with the 'posted' flag flipped. Good.",
+    "Publish button correctly disables when wantsTraining && !selectedTraining. When all sessions are posted the picker leaves selectedTraining pointing at a posted id (from initial pre-select) but the button stays disabled because the user cannot re-click a posted option; however selectedTraining state still holds the posted id. Consider clearing selectedTraining when the current selection becomes 'posted' to avoid a stale state, and ideally show an inline hint like 'All of today's sessions have been posted.'",
+    "DialogContent lacks a Description/aria-describedby — add DialogDescription or aria-describedby to silence a11y warning and improve screen reader support."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a", "frontend": "100%" },
+  "test_credentials": "lucas.silva@email.com/demo123 (athlete with 2 training sessions today + 60/100 recovery); localStorage.setItem('bl_install_modal_dismissed','true') to skip PWA install modal",
+  "seed_data_creation": "Published 2 training check-ins as Lucas Silva for both today's sessions (Strength 07:30 photo1, Conditioning 17:30 photo2). Neither awarded extra points (max 1 training pt/day already reached earlier).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Both of Lucas's today sessions are now marked Posted (training-option-efeb9c5f... Strength, training-option-357eafc3... Conditioning). Reopening the compose modal shows both disabled with 'Posted' badge and publish-btn disabled. Recovery still at 60/100 Incomplete. If retesting, either seed additional training sessions for today or use a different athlete."
+}

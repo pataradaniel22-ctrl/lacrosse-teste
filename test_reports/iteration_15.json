@@ -1,0 +1,33 @@
+{
+  "summary": "Frontend-only test of the new 'Training Sessions' detailed view on the staff Athlete Detail → History tab (Lucas Silva). All 7 requested behaviours verified end-to-end: presence & data-testids of the section/columns/filter/window selector, column sorting toggle (Load desc/asc + Date), session-type filter (chip filtering + badge count update), window selector network refetch to /api/staff/athlete/{id}/sessions?days=90 and 365, row click opening session-detail-modal with all six metrics + modal photo, lightbox open both from session-modal-photo and from thumbnail (with stopPropagation preventing row modal), and regression check that Recent Check-ins card + all sibling tabs still load. All tests pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Training Sessions window selector — return to 30d",
+        "issue": "Clicking 30d after 90d/1y updates sessionWindow state but does NOT refetch sessions. The useEffect guards with `if (athleteId && sessionWindow !== 30) fetchSessions(sessionWindow);` (AthleteDetail.js line 205-207), so the table keeps whatever data was last fetched (e.g. 1y results). Not visible on Lucas Silva because all his sessions are within 30d, but for athletes with older sessions the 30d chip will show stale wider-window data. Requirement bullet #4 says '30d returns to the default window' — currently only the highlighted chip returns, not the data.",
+        "affected_selectors": ["[data-testid='session-window-selector'] button:has-text('30d')"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "AthleteDetail.js line 205-207: remove the `sessionWindow !== 30` guard (just call `fetchSessions(sessionWindow)` unconditionally when sessionWindow changes) so 30d also refetches after switching from 90d/1y. Initial fetch is already handled by fetchData(), so it's safe to always refetch on subsequent changes."
+  ],
+  "critical_code_review_comments": [
+    "AthleteDetail.js is 2010 lines — well over the 700-line guideline. Consider splitting each tab (History, Readiness, Workload, CMJ, Pain, Nutrition, Compliance) into its own component and moving the new session table/modal/lightbox into e.g. TrainingSessionsCard.jsx.",
+    "sessionPhotoUrl embeds the raw JWT into the <img src> as `?auth=<token>`. Works, but the token can leak via browser history / referer / server access logs. Prefer a short-lived signed URL or streaming the photo through an authorised fetch → object URL.",
+    "displayedSessions is re-computed on every render (spread + filter + sort). For 3 rows it's fine, but wrap in useMemo keyed on [sessions, sessionTypeFilter, sessionSort] once athletes with many sessions appear.",
+    "The row modal's default values (Pain during / Pain after / End fatigue) fall back to 0 with the ?? operator — good — but there is no distinction between 'not recorded' and 'recorded as 0'. Consider showing '—' when the field is null/undefined."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (frontend-only)", "frontend": "~95% (1 minor state/refetch bug)"},
+  "test_credentials": "cristina.velez@brasillacrosse.com / 123456 (staff admin). Athlete: /staff/athlete/ef8f73dc-2939-4aa6-8ac7-710a9c1307eb (Lucas Silva) — 3 sessions (Conditioning 360AU, Technical 280AU with pain_after=3, Home training 276AU), each with a demo photo.",
+  "seed_data_creation": "None — used existing demo seed data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All new data-testids from the spec exist and behave correctly: training-sessions-detail, session-col-{date,type,duration_min,rpe,internal_load,pain}, session-type-filter, session-window-selector, session-row-{id}, session-thumb-{id}, session-detail-modal, session-modal-photo, session-lightbox. Sorting toggles asc/desc on 2nd click. Type filter updates the badge count next to the title. 90d and 1y correctly hit the API with days=90 / 365. Row click opens modal, modal photo click opens lightbox, thumbnail click opens lightbox WITHOUT also opening the row modal (stopPropagation confirmed). Escape closes lightbox then modal. Lucas has all 3 sessions within 30d, so the 30d-refetch bug isn't user-visible here — to reproduce, seed a session older than 30d and switch 1y→30d.",
+  "rca of the issue": "The useEffect that reacts to sessionWindow (AthleteDetail.js:205) intentionally skips the initial value 30 to avoid a duplicate initial fetch (fetchData already loads days=30). However the guard `sessionWindow !== 30` is on the *value*, not on 'first render only', so any later transition back to 30 is also silently skipped. Fix: track initial-load with a ref (e.g. hasFetchedRef) or simply always call fetchSessions(sessionWindow) once the athleteId is known — the extra initial call is cheap and correct."
+}

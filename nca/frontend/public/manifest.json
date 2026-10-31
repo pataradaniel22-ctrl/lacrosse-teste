@@ -1,0 +1,25 @@
+{
+  "short_name": "Brazil Lacrosse",
+  "name": "Brazil Lacrosse Athlete Monitoring",
+  "icons": [
+    {
+      "src": "brazil-lacrosse-logo.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "brazil-lacrosse-logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "brazil-lacrosse-logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#002776",
+  "background_color": "#0a0a0a"
+}

@@ -1,0 +1,37 @@
+{
+  "summary": "Phase 1 OSTRC-H2 Weekly Health Check (athlete core) tested end-to-end. Backend: 10/10 pytest passed (questionnaire shape, status transitions, official scoring paths Q1=a/b-c-d and typical b/c, substantial flag, multiple problems, postpone, validation, staff 403). Frontend: 17/17 UI checks passed across 4 flows using data-testids (full multi-step submit, no-problem fast path, Q1=d skip, multi-problem 'Problem 2' header, badge Ready->Completed transition, non-mandatory ready athlete NOT gated).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Athlete Home", "issues": ["PWA 'Install the app' modal auto-appears over the Weekly Health Check card on first load; blocks card interaction until dismissed. Consider hiding it on first login of an athlete OR making the card z-index higher so users can still tap it. Not a blocker (dismissable), but adds friction."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_health_ostrc.py",
+    "/app/test_reports/pytest/health_ostrc.xml"
+  ],
+  "action_items": [
+    "(Optional UX) Suppress or de-prioritize the 'Install the app' PWA prompt so it doesn't overlap the weekly health card on first visit."
+  ],
+  "critical_code_review_comments": [
+    "health_routes.py: nice separation, official scoring correct (Q1 a=0/skip, d=100/skip, b/c summed + Q2-Q4). Substantial rule matches spec (Q1=d OR Q2 in c/d OR Q3 in c/d). Score 0 problems are correctly not persisted unless linked to an existing problem — good.",
+    "AthleteHome.js Weekly Health card is a <Link to='/athlete/health-check'> but also has onClick that navigates to the SAME path when state === 'completed'. The onClick branch is redundant (Link already goes there) and only preventDefault→navigate — cosmetic dead code, safe to remove.",
+    "WeeklyHealthCheck.js: on submit error (catch block) phase is set back to 'review' with a toast — good UX. Consider disabling the Submit button while phase==='submitting' to avoid double-submit (currently the submit button is not rendered in submitting phase, so it's fine).",
+    "goBack() from 'details' when Q1==='d' returns to Q1 (setPhase('ostrc'); setQIndex(0)) — correct because Q2-Q4 were skipped.",
+    "server-side status returns can_postpone only for ready+non-mandatory; UI does not yet expose a 'Later' button (postpone endpoint exists but is not surfaced) — expected per Phase 1 scope note."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_health_ostrc.py (new)"
+  ],
+  "success_rate": {"backend": "100% (10/10)", "frontend": "100% (17/17 UI assertions across 4 flows)"},
+  "test_credentials": "Used demo athletes (demo123): julia.pereira (full-flow), maria.souza (no-problem fast path), camila.lima (Q1=d skip), fernanda.silva (multi-problem). Backend tests consumed lucas.silva, rafael.oliveira, bruno.ferreira, diego.almeida, thiago.martins and postponed felipe.rodrigues.",
+  "seed_data_creation": "None; used seeded demo athletes.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Many demo athletes now show 'Completed' state for the week (7-day cycle) after this iteration. If future tests need Ready athletes, either re-seed via /api/seed-demo or clear health_weekly_submissions/health_status_meta collections. The following demo athletes are still 'Ready' as of this run: beatriz.santos, larissa.costa, carolina.rocha, gabriel.costa (verify via GET /api/health/status). Weekly Health card badge and gating logic behave correctly. Staff Health Dashboard is out of scope for Phase 1."
+}

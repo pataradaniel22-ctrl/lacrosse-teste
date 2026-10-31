@@ -1,0 +1,23 @@
+{
+  "summary": "Verified bug fix on Staff Registration page at mobile viewport 390x780. Radix Select dropdowns for Role and Team have been replaced with tappable chip buttons. Tapping Role and Team chips no longer causes page scroll-jump. Chip selection works visually, and end-to-end registration completes successfully.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "StaffRegister.js - chip button implementation is correct and eliminates the previous Radix Select scroll-jump issue on mobile. Uses type='button' which prevents accidental form submit.",
+    "Minor: data-testid values include spaces for teams (e.g., 'staff-register-team-Brazil Lacrosse Men'). Valid but kebab/underscore-case would be more selector-friendly. Not blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "N/A - public /register/staff page. Registered with qa_staff_h272lj65@brazillacrosse.com / test1234",
+  "seed_data_creation": "One staff account created in DB during E2E: qa_staff_h272lj65@brazillacrosse.com (Physio, Brazil Lacrosse Men). Non-blocking test data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Bug fix on Staff Registration mobile scroll-jump has been verified end-to-end. Role/Team chips work correctly. Registration submits and navigates to /staff.",
+  "rca of the issue": "Original bug: Radix UI Select dropdowns used portals/overlays which shifted the mobile viewport on open, causing the page to scroll upward and making chip selection awkward. Fix replaced Select with in-place chip <button> elements bound to formData.role/team. No portal/overlay is opened, so scroll position is preserved. Verified: scrollY delta = 0px for both Role and Team taps at 390x780."
+}

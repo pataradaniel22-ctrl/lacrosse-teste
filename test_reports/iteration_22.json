@@ -1,0 +1,44 @@
+{
+  "summary": "OSTRC-H2 Phase 5b (athlete↔staff messaging + report-error + staff delete-submission) end-to-end verified. Backend: 14/14 pytest passed (new suite at /app/backend/tests/test_health_phase5b_messaging.py). Endpoints exercised: POST /health/athlete/messages/{note_id}/read (idempotent — second call returns updated=0), POST /health/athlete/messages/reply (empty text → 400, missing submission_id falls back to latest, reply appears in GET /health/athlete/messages with from_athlete=true), POST /health/athlete/report-error (404 for unknown id AND for a submission owned by a different athlete — permission enforced via 'athlete_id' compound match), GET /health/staff/alerts (correction alert emitted with severity=high, handled=false, message includes the reason verbatim), DELETE /health/staff/submission/{id} (200 with athlete_id echoed; cascades observations by submission_id and health_problems where first_submission_id==id; verified deleted submission no longer in /health/my-history; athlete token → 403; unknown id → 403 short-circuits before 404 for athletes, 404 for staff). E2E confirmed on staff review panel: visible notes show ✓ 'Read by athlete on 2026-07-19', athlete replies render with 'Athlete reply' badge, private notes still labelled 'Private'. Frontend athlete: medical-messages-card renders full thread; message-reply-input + message-reply-send POSTs reply successfully (backend note appended, visible on staff side); message-confirm-read buttons are absent only because all Lucas' visible notes already had read_at set from prior seeding — the '✓ Read' state is confirmed present. MyHistory tab-health renders 11 health-history-item cards with 11 report-error buttons; the pre-reported submission shows the 'Error reported — awaiting staff' badge and its button is disabled/text='Reported'. Staff HealthSurveillance: 8 alerts render; opening the correction alert for Lucas shows the correction-banner + review-delete-submission-btn + 'Athlete reply' badges + 'Read by athlete' timestamps. No console errors.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Athlete Home / Athlete History",
+        "issues": [
+          "PWA 'Install the app' modal auto-opens on every session start and overlays the medical-messages-card until dismissed. Consider surfacing it once per session or after first interaction (pre-existing, not part of this phase).",
+          "Recharts 'width(-1) and height(-1) of chart should be greater than 0' still fires on initial paint (pre-existing)."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_health_phase5b_messaging.py",
+    "/app/test_reports/pytest/health_phase5b.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "health_routes.py L950-958 athlete_mark_message_read: correct idempotency via array_filters {n.read_at: {$exists: False}} — second call yields modified_count=0 (verified). Also correctly scoped to {athlete_id: aid} so an athlete cannot mark someone else's note.",
+    "health_routes.py L960-986 athlete_reply_message: correct 400 on empty text (after .strip()), correct fallback to the athlete's latest submission when submission_id is missing/invalid, correctly stamps from_athlete=True and visible_to_athlete=True. Note: replying resets review_status to 'not_reviewed' via the $set — verified this brings the submission back into the 'not reviewed' section of the review queue after each athlete reply (arguably desired; flagging as informational rather than a bug).",
+    "health_routes.py L988-1001 athlete_report_error: does NOT reject empty reason (accepts payload={submission_id:..., reason:''}) — matches the spec (frontend uses window.prompt which can return empty). Correct permission scoping via {id, athlete_id} single lookup. 404 for both unknown id and foreign submission — good.",
+    "health_routes.py L830-863 health_alerts correction branch: correctly emits 'correction' alert with severity='high' and handled=False (unconditional, ignoring review_status — right for a correction request). Message embeds the reason in quotes. break after first correction found per athlete prevents duplicates across multiple submissions — good.",
+    "health_routes.py L1003-1016 staff_delete_submission: correct 3-step cascade (submissions → observations by submission_id → health_problems by first_submission_id) plus health_status_meta cleanup to force status recompute. NOTE: does NOT recompute the athlete's current health-problem state for problems that had subsequent observations tied to the deleted submission but were CREATED earlier (first_submission_id != this id). Those health_problem records will retain a current_submission_id / current_severity_score pointing to the deleted submission until the next submit. Not user-visible in the current UI but worth a follow-up if the observation counts are ever exposed.",
+    "health_routes.py L844-849 (contact alert): projection asks for {'request_contact': 1} but the field created by /health/submit is 'requested_medical_contact' (line 335) — so contact alerts will NEVER fire in production. Pre-existing bug outside the scope of this iteration but recommend a follow-up fix (either rename the projection key to 'requested_medical_contact' or store both).",
+    "AthleteHome.js medical-messages-card + MyHistory.js Health tab + HealthSurveillance.js correction-banner/delete-btn/athlete-reply badge — all data-testids present and functional. window.confirm/prompt usage matches spec."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_health_phase5b_messaging.py (new — 14 tests)"
+  ],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% (all 4 UI surfaces verified: athlete messages, athlete history health tab + report badge, staff correction banner + delete btn + athlete-reply badge + read receipts)"},
+  "test_credentials": "Staff: cristina.velez@brasillacrosse.com / 123456. Athlete: lucas.silva@email.com / demo123.",
+  "seed_data_creation": "Added a few TEST_-prefixed medical notes on Lucas's latest submission (1 visible + 1 private per test run), submitted+deleted two throwaway health submissions (1 with an injury problem, 1 no_problem) to verify cascade, and posted 2 athlete replies (TEST_ui_reply_from_playwright, TEST_reply_<uuid>). Also flagged Lucas's latest submission with correction_requested='TEST_wrong_answers_pls_delete' — this is left in place so main-agent screenshots of the correction banner keep working. To reset: unset correction_requested/correction_reason on Lucas's latest submission or run POST /health/staff/review/{id} with mark_reviewed=true.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Regression suite for Phase 5b lives at /app/backend/tests/test_health_phase5b_messaging.py. Requires env REACT_APP_BACKEND_URL. It creates + deletes its own submissions so it is safe to re-run. Two pre-existing (non-scope) items worth watching: (1) contact-alert field mismatch (request_contact vs requested_medical_contact) means the 'contact' alert branch is dead code — will need a separate fix, (2) staff_delete_submission does not recompute severity for pre-existing health_problems that had observations in the deleted submission (first_submission_id != id) — cosmetic only for now. PWA install modal reliably overlays athlete home on cold start; use aria-label='Close' to dismiss in Playwright.",
+  "rca of the issue": "No new bugs found in Phase 5b; two pre-existing latent bugs surfaced during code review — see critical_code_review_comments."
+}

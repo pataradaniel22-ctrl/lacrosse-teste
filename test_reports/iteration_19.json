@@ -1,0 +1,48 @@
+{
+  "summary": "Phase 2 Staff Health Dashboard (OSTRC-H2) tested end-to-end. Backend: 13/13 pytest passed (overview shape+auth boundary, athletes list sorted substantial-first & desc severity, substantial list shape/sort, athlete profile with longitudinal observations, 404 unknown, 403 for athlete tokens, Phase-1 regression). Frontend: all data-testids render at 1440x900 (health-nav-btn -> /staff/health, health-kpis, substantial-section with 9 rows, health-athletes-table with 16 rows, health-profile-modal opens from BOTH substantial-<id> and health-row-<id>, closes via Escape). Overview showed 62% response, 7 with problems, 7 substantial, 1 contact request — matches Phase 1 seed context.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Health Profile modal (loading state)",
+        "issues": [
+          "Radix a11y console warnings: 'DialogContent requires a DialogTitle' + 'Missing Description/aria-describedby'. Cause: while profileLoading is true, HealthSurveillance.js renders only <p>Loading profile…</p> without a DialogTitle/DialogDescription. Wrap the loading placeholder with a visually-hidden DialogTitle+DialogDescription to satisfy Radix. Non-blocking (modal still functions)."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_health_staff_dashboard.py",
+    "/app/test_reports/pytest/health_staff_dashboard.xml"
+  ],
+  "action_items": [
+    "(Optional a11y polish) In /app/frontend/src/pages/staff/HealthSurveillance.js, when profileLoading/profile?.loading is true, render a visually-hidden DialogTitle + DialogDescription (or move DialogHeader outside the conditional) to remove Radix a11y warnings."
+  ],
+  "critical_code_review_comments": [
+    "health_routes.py _athlete_health_summary: 'trend' is built from subs[:3][::-1] but subs is already sorted desc by submitted_at, so trend is [oldest,...newest] of the last 3 — correct.",
+    "health_routes.py staff_health_athletes: sort key uses (substantial, current_severity, is_mandatory) reverse=True — verified sorts substantial=True first, then severity desc. Good.",
+    "health_routes.py staff_substantial_problems: filters out resolved/archived and adds athlete_name/team — good. Note: filter uses $or [{substantial_problem:True},{current_severity_score:>=17}] which correctly surfaces both flags.",
+    "health_routes.py staff_health_overview: severity_distribution only counts athletes WHERE active_problems>0 (bands intentionally excludes 'none'-only athletes) — matches Phase-2 spec ('athletes with problems').",
+    "HealthSurveillance.js openProfile sets profile({loading:true}) then replaces with data — DialogContent is always rendered while profile truthy, but DialogTitle is inside the else branch. Move a hidden DialogTitle to the always-rendered path (see action item).",
+    "HealthSurveillance.js Sparkline: if trend is empty renders '—'; otherwise uses Math.max(100, ...values) as denominator so bars are correctly scaled 0-100. Good.",
+    "HealthSurveillance.js athlete row click delegates to openProfile(a.athlete_id); no stopPropagation needed since nothing else is clickable in the row — clean."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_health_staff_dashboard.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13)",
+    "frontend": "100% (all data-testids + modal open/close from both entry points)"
+  },
+  "test_credentials": "Staff: cristina.velez@brasillacrosse.com / 123456. Athlete (403 check): lucas.silva@email.com / demo123.",
+  "seed_data_creation": "None. Reused Phase-1 seed data (Rafael/Diego/Camila/Fernanda sev 100, Ana/Bruno 67, etc.).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Staff Health Dashboard (Phase 2) is verified. Regression tests for Phase 1 athlete health/status also included in test_health_staff_dashboard.py. Do NOT delete health_weekly_submissions/health_problems/health_problem_observations collections — future dashboards depend on this data. Phase 3 (ACWR removal, alerts, permissions) is out of scope for this iteration.",
+  "rca of the issue": "n/a — no functional issue found. Only minor Radix a11y console warnings on modal loading state (does not affect functionality)."
+}

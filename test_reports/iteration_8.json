@@ -1,0 +1,50 @@
+{
+  "summary": "Frontend-only smoke test for Brazil Lacrosse demo readiness. Verified: login works in real browser (no splash trap), staff dashboard renders full rich demo dataset (16 athletes, populated KPIs, multiple charts, radar, pain-by-body-region with 5 regions, menstrual monitor with 3 in-period athletes incl. Severe + Very-Severe alerts, active alerts), and athlete detail page (Lucas Silva) shows ACWR card (1.00 SWEET SPOT), weekly load trend, compliance (100%/47.8%), readiness vs team comparison chart, pain location map (2 marker areas - Elbow 8/10 + WristHand 7/10), and tabs (Readiness/Workload/CMJ/Pain Report/Compliance/History). 0 JS console errors on dashboard and athlete detail.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "AthleteDetail (Lucas Silva) - Daily Readiness Profile radar", "issue": "Shows 'No check-in data for 2026-06-04' for Today. Team radar shows 14/16 checked in so Lucas may legitimately be one of the 2 missing today, but for a demo it's a soft-empty state right at the bottom of the page. Switching to Yesterday/2d ago should populate it - users may not realize they need to switch days.", "selector": "individual-readiness-radar / 'No check-in data'", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard", "issues": ["2 generic 404 console errors on initial dashboard load (likely PWA icon/manifest or unmounted sw asset - does not break rendering, 0 PAGEERRORs)."]}
+    ]
+  },
+  "passed_tests": [
+    "Service worker + cache cleared and reload completes without 'Carregando...' splash trap",
+    "Login cristina.velez@brasillacrosse.com / 123456 -> /staff in ~5s, email input retains value in real Chromium",
+    "Dashboard KPIs: ATHLETES=16, READINESS=6.4, TOTAL LOAD=34,250 AU, AVG LOAD=2,141 AU, ALERTS=3",
+    "Daily Readiness Score chart: 16 athlete lines across 14+ days, Risk Threshold dashed line + Danger Zone shaded",
+    "Daily Internal Load chart: 16 athletes across full date range",
+    "Team Daily Readiness Profile radar: 5 axes (Sleep/Energy/Muscle Recovery/Mental Wellness/Readiness) with values populated (6.8/5.8/6.3/6.6/6.4), 14/16 checked in indicator",
+    "Daily Pain by Body Region: 6 pain reports from 14 sessions, lists Elbow (2 reports, 6.5/10), HipGroin (2 reports, 4.5/10), WristHand (1 report, 7/10), Knee (1 report, 6/10), Shoulder (1 report, 2/10)",
+    "Female Team Wellness Monitor: 3 in period / 8 total female / 37.5% rate / 2 severe pain. Camila Lima (Very Severe, Moderate flow, 5.8/10, cramps+low back pain+breast tenderness), Ana Oliveira (Severe, Heavy flow, 3.2/10), Maria Souza (Mild, Light flow, 7.2/10 + training pain HipGroin Left 5/10). 'Combined High Pain Alert' card showing Ana Oliveira.",
+    "Active Alerts panel: Lucas Silva (Yellow readiness queda), Rafael Oliveira (Red pico de carga), Ana Oliveira (Yellow dor reportada)",
+    "Athletes sidebar: 16 athletes (8 Men + 8 Women) all rendered with data-testid athlete-link-<uuid>",
+    "AthleteDetail (/staff/athlete/<lucas_uuid>): header 'Lucas Silva / Brazil Lacrosse Men', ACWR=1.00 SWEET SPOT, Acute Load 2,551 AU, Chronic 2,543 AU, Weekly Load Trend bar chart (5 weeks)",
+    "AthleteDetail Compliance KPIs: Daily 100% (7/7), Monthly 47.8% (43/90), High Pain 13 of 33 total, Affected: Knee",
+    "AthleteDetail tabs: Readiness | Workload | CMJ | Pain Report | Compliance | History (all present)",
+    "AthleteDetail Readiness Score vs Team Average chart populated (Lucas Silva 7.2 vs Team 6.9 on hover)",
+    "AthleteDetail Pain Location Map: 2 pain areas, FRONT/BACK body figures with red markers; PAIN DETAILS lists Elbow Left 8/10 Severe + WristHand Left 7/10 Severe",
+    "Recharts SVGs rendering: 35 chart wrappers + 33 data paths on dashboard, 4 charts + 7 data paths on athlete detail (sufficient given 1 bar + 1 line + body-map)",
+    "0 JS console error / 0 page errors during login, dashboard render, and athlete detail render"
+  ],
+  "test_report_links": ["/app/test_reports/iteration_8.json"],
+  "action_items": [
+    "(Optional) Investigate the 2 generic 404s on dashboard load (probably /manifest icon or stale sw asset). Does not affect functionality.",
+    "(Optional, demo polish) The individual radar's 'No check-in for today' empty state on Lucas Silva is correct data-wise but breaks the visual flow at the bottom of his page. Consider auto-falling-back to most-recent-day-with-data or pre-selecting Yesterday so the radar is always populated on first view."
+  ],
+  "critical_code_review_comments": [
+    "AthleteDetail.js: Individual readiness radar's 'No check-in' empty state could auto-fallback to the most recent checked-in day when Today has no data. UX nit.",
+    "Service worker registration appears to be working (no splash trap reproduced in headless Chromium after one SW unregister+reload). HTML/JS network-first fix verified.",
+    "CMJ tab content was not deep-validated (tab presence confirmed, click-into-tab content not asserted) — recommend a follow-up test if CMJ rendering for demo is critical."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped (frontend-only request)", "frontend": "~98% (all primary demo views render with rich data; one minor empty-state UX nit + 2 inconsequential 404s)"},
+  "test_credentials": {"staff": "cristina.velez@brasillacrosse.com / 123456", "athlete": "lucas.silva@email.com / demo123"},
+  "seed_data_creation": "No new seed run; previously seeded data via /api/seed-demo is fully reflected (16 athletes, ~45 days, period+pain reports, CMJ baselines per agent).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Splash-screen + login is unblocked in a real Chromium browser. Useful selectors: input[type='email']/[type='password'], button[type='submit'] for login. Athlete sidebar uses data-testid='athlete-link-<UUID>'. Direct nav works: /staff/athlete/<uuid>. AthleteDetail uses tab labels Readiness/Workload/CMJ/Pain Report/Compliance/History — currently script only validated default Readiness tab; CMJ tab content was not deep-clicked. Female monitor reads 3 in period / 8 total / 37.5% on date 2026-06-04 (today in app context). The 2 generic '404' console errors on dashboard load are unidentified static-asset 404s — non-blocking but worth investigating in a future iteration. The previously-suspected 'email input losing value in iframe' issue (mentioned in main-agent context) is NOT reproduced in direct browser context — login works end-to-end.",
+  "rca of the issue": "No critical bug found. The only soft issue (individual radar 'No check-in data for Today') is a legitimate data state — Lucas Silva is one of the 2 athletes with missing check-ins today; selecting Yesterday or earlier in the radar's day-picker would populate it. Recommend auto-falling-back to the most recent day with data on initial render."
+}

@@ -1,0 +1,51 @@
+{
+  "summary": "Full validation of new Nutrition & Hydration Calculator feature + EVENT_MODE staff-dashboard card hiding. Backend pytest /app/backend/tests/test_nutrition.py PASSES 12/12: formula correctness for endurance/strength at multiple weights (Endurance 80kg daily_carbs=640..800, protein=112..144, pre34_carbs=80..320, pre34_protein=12..20, hyd4=400..560, hyd2=240..400; Strength 82kg daily_carbs=410..492, hyd4=410..574); /api/nutrition/calculate works for both athlete and staff tokens; /api/nutrition/plans correctly saves and demotes previous current plan; /api/nutrition/plans/current returns current for athlete (own) and staff (via ?athlete_id=); /api/nutrition/plans/history is newest-first; PATCH /api/nutrition/plans/{id}/override is staff-only (athlete=403), correctly stores override values, flips modified_by_staff=true, sets modified_by_name, ignores non-editable keys; DELETE /api/nutrition/plans/{id} deletes and promotes most-recent remaining when the deleted one was current. Frontend (real Chromium): Athlete (lucas.silva) /athlete/nutrition - weight=80 + Endurance shows daily_carbs '640 – 800 g/dia' live preview; toggle to Strength shows '400 – 480 g/dia'; 'Salvar como plano atual' saves and triggers History tab to list the new plan with weight 80 and Endurance label; post-competition mini-calculator (peso perdido=2) shows 'nutrition-post-liters' = '3.0 L' (kg*1.5). Staff (cristina.velez) /staff/athlete/{lucas-id} -> Nutrition tab: current plan visible; clicking 'Ajuste manual' (nutrition-override-btn) opens dialog exposing 13 override testids (per editable key min/max + note + save); filling daily_carbs min=700/max=900 + saving shows toast 'Ajustes da comissão aplicados', daily_carbs row now reads '700 – 900 g/dia' with badge 'Modificado pela comissão' and header badge 'Ajustado pela comissão'. Staff Dashboard /staff with EVENT_MODE=true: across Long/Medium/Short tabs, the hidden cards ['Monthly Cumulative Load','Chronic Load Trend','Weekly Training Consistency','ACWR','Weekly Workload','Daily Internal Load by Athlete'] are ALL absent from DOM, while 'Weekly Readiness Average', 'Pain', 'Compliance' remain visible. 0 console errors during the full flow.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "BACKEND pytest 12/12 /app/backend/tests/test_nutrition.py",
+    "POST /api/nutrition/calculate Endurance 80kg -> daily_carbs 640..800, protein 112..144, pre34_carbs 80..320, pre34_protein 12..20, hyd4 400..560, hyd2 240..400",
+    "POST /api/nutrition/calculate Strength 82kg -> daily_carbs 410..492, hyd4 410..574",
+    "POST /api/nutrition/calculate via staff token works (no body athlete_id required for calculate-only)",
+    "POST /api/nutrition/plans (athlete) demotes previous is_current=true and sets new plan current",
+    "POST /api/nutrition/plans (staff with athlete_id) saves on behalf of athlete; created_by_type=staff; created_by_name populated",
+    "GET /api/nutrition/plans/current returns latest current for athlete and (?athlete_id=) for staff",
+    "GET /api/nutrition/plans/history newest-first ordering verified",
+    "PATCH /api/nutrition/plans/{id}/override staff applies override; sets modified_by_staff=true, modified_by_name; metrics carry override_min/override_max/is_overridden",
+    "PATCH /api/nutrition/plans/{id}/override athlete -> 403",
+    "PATCH override ignores non-editable keys (daily_fat) and preserves editable overrides",
+    "DELETE /api/nutrition/plans/{id} on current plan promotes most-recent remaining plan to is_current=true",
+    "FRONTEND Athlete: live preview text for both types, save persists, history tab lists saved plan, post-liters mini calc = kg*1.5",
+    "FRONTEND Staff: current plan renders on AthleteDetail Nutrition tab; override dialog opens with all expected per-editable-key min/max inputs; override save updates UI immediately and shows both badges 'Ajustado pela comissão' and 'Modificado pela comissão'",
+    "FRONTEND EVENT_MODE: 6 training-load cards hidden across Long/Medium/Short tabs; Readiness/Pain/Compliance preserved"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_nutrition.py",
+    "/app/test_reports/pytest/nutrition.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "nutrition_routes.py: GET /nutrition/plans/current returns Python None which FastAPI serializes to JSON null; frontend must explicitly handle null (it does). Consider returning {} or 204 for consistency with other endpoints.",
+    "nutrition_routes.py PlanRequest: when staff calls POST /nutrition/plans without athlete_id the endpoint returns 400 (good), but the calculate endpoint silently coerces unknown athlete_type to 'endurance'. Consider validating athlete_type strictly (Literal['endurance','strength']) and returning 422 for unknown values to avoid silent data drift.",
+    "apply_override: when overrides dict becomes empty (all values None), modified_by_staff is reset to False and modified_by_name to None; this is fine but the previous override_note is overwritten with the new req.note (which can be None) — consider only clearing the note when overrides are also cleared via the dedicated 'Limpar ajustes' button.",
+    "Override editable keys are recomputed from compute_metrics on every PATCH which is cheap, but the editable set is hardcoded in the formula function; consider centralizing the EDITABLE_KEYS constant to avoid drift if future metrics become editable.",
+    "compute_metrics is pure & deterministic — good. Add a unit-test guard against accidental formula changes by snapshotting the metric tree for a fixed (weight, type) input."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_nutrition.py (new, 12 tests, all passing)"
+  ],
+  "success_rate": { "backend": "100% (12/12)", "frontend": "100% on all listed flows and selectors" },
+  "test_credentials": {
+    "admin_staff": "cristina.velez@brasillacrosse.com / 123456",
+    "athlete": "lucas.silva@email.com / demo123"
+  },
+  "seed_data_creation": "Created and then deleted ~5 test nutrition_plans rows for Lucas Silva (cleaned up at end; current plan = null after run).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Nutrition feature fully working end-to-end. Run /app/backend/tests/test_nutrition.py for regression. Frontend reusable component is /app/frontend/src/components/NutritionHydration.jsx; key testids: nutrition-weight-input, nutrition-type-endurance, nutrition-type-strength, nutrition-save-btn, nutrition-tab-calculator, nutrition-tab-history, nutrition-weight-lost-input, nutrition-post-liters, nutrition-override-btn (opens Radix dialog), nutrition-override-{key}-min, nutrition-override-{key}-max (keys: daily_carbs, daily_protein, pre34_carbs, pre34_protein, hyd4, hyd2), nutrition-override-note, nutrition-override-save-btn, nutri-metric-{key}. Login button text on /login is English 'Sign In' (NOT 'Entrar'). EVENT_MODE flag at /app/frontend/src/pages/staff/StaffDashboard.js line ~234 correctly hides 6 training-load cards.",
+  "rca of the issue": "No bugs found. All P0 acceptance criteria for Nutrition & Hydration feature and EVENT_MODE card hiding satisfied on both backend and frontend."
+}

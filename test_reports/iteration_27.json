@@ -1,0 +1,35 @@
+{
+  "summary": "Frontend-only verification of the Staff → Athlete Detail → Compliance tab 'Check-in Calendar'. All acceptance criteria PASS: full month grid with weekday headers (Sun..Sat), correct leading empty cells, 31 day-cells for Aug 2026 (data-testid=checkin-day-YYYY-MM-DD), green check for checked-in days / red X for missed, dimmed future days, month navigation working, next-month disabled on current month and enabled on past months. During testing, a backend KeyError on /api/staff/athlete/{id}/readiness-with-team-avg was blocking the whole athlete-detail page (was rendering 'Athlete not found' because the Promise.all fetch rejected). Applied a minimal defensive patch in server.py to unblock UI verification; recommend main agent audit similar dict['key'] accesses on legacy seeded records.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "/api/staff/athlete/{id}/readiness-with-team-avg?days=30", "issue": "KeyError: 'sleep_quality' (also 'muscle_soreness') at server.py:1788 when legacy check-in entries lack those keys. Returned HTTP 500 which caused frontend Promise.all in AthleteDetail to reject → the entire Athlete Detail page rendered 'Athlete not found', including the Compliance tab under test. Patched with entry.get('sleep_quality', 0) / entry.get('muscle_soreness', 0) to unblock testing; main agent should validate the correct fallback semantics (0 vs null) and audit other endpoints reading these fields (readiness/CMJ/pain aggregates) for similar hard KeyError risk.", "priority": "HIGH"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "AthleteDetail loadData", "issue": "Promise.all is used to fetch 7 endpoints in parallel; a single 5xx from any one endpoint (e.g., readiness-with-team-avg) triggers the catch that shows a top-level 'Athlete not found' — masking the real error and blocking unrelated tabs like Compliance. Consider using Promise.allSettled and per-section error states.", "affected_selectors": ["text=Athlete not found"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Review /api/staff/athlete/{id}/readiness-with-team-avg for correct handling of legacy entries missing sleep_quality/muscle_soreness (my fallback of 0 is a stop-gap).",
+    "Refactor AthleteDetail.loadData to use Promise.allSettled so one failing endpoint doesn't wipe out the entire page and Compliance tab.",
+    "Audit other endpoints that dereference entry['sleep_quality']/['muscle_soreness']/['fatigue_level']/['stress_level'] with subscript access."
+  ],
+  "critical_code_review_comments": [
+    "server.py:1788 uses raw dict subscript on optional check-in fields — brittle for older seeded data; use .get with sane defaults or coerce at ingest.",
+    "AthleteDetail.js line 268 Promise.all: single failure fails the whole page; use allSettled + per-widget graceful fallbacks.",
+    "AthleteDetail.js is >2300 lines — consider splitting into per-tab components (Readiness/Workload/CMJ/PainReport/Nutrition/Compliance/History/Prontuário)."
+  ],
+  "updated_files": ["/app/backend/server.py"],
+  "success_rate": {"backend": "n/a (frontend-only scope)", "frontend": "100% (all Compliance calendar acceptance criteria pass)"},
+  "test_credentials": "coach@brazillacrosse.com / staff123 (staff). Lucas Silva athlete id ef8f73dc-2939-4aa6-8ac7-710a9c1307eb confirmed via GET /api/staff/athletes.",
+  "seed_data_creation": "None. Used existing seeded data.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Check-in Calendar UI fully verified against Lucas Silva. Aug 2026 (current): 31 cells, 0 green / 29 red / 2 future, 6 leading empties (Aug 1 = Sat), next-month DISABLED. Prev-month navigates to July 2026: 31 cells, 23 green / 8 red / 0 future, next-month ENABLED. Returning to current month re-disables next. 0 console errors after backend patch. Weekday headers Sun..Sat rendered above the grid. If backend regressions on readiness-with-team-avg reappear, the whole athlete-detail page will fail with 'Athlete not found' — check backend logs first.",
+  "rca of the issue": "AthleteDetail.js fetches 7 endpoints via Promise.all. GET /api/staff/athlete/{id}/readiness-with-team-avg raised KeyError 'sleep_quality' at server.py:1788 for entries lacking that field, causing HTTP 500. Promise.all rejected → catch branch set athlete=null → UI rendered 'Athlete not found', hiding the Compliance tab under test. Reproduction: login as coach@brazillacrosse.com, GET the endpoint above with Bearer token → HTTP 500 with 'KeyError: sleep_quality' in backend logs. Mitigation applied: replaced entry['sleep_quality'] and entry['muscle_soreness'] with .get(..., 0). Recommended: switch to allSettled on FE + defensive field access on BE."
+}

@@ -1,0 +1,31 @@
+{
+  "summary": "Iteration 34: Tested new Research adherence report + Google Sheets live CSV feeds (backend + frontend). All 17 pytest backend tests pass covering /api/research/adherence (admin only; coach/athlete 403; math verified; team filter; period filter), adherence_weekly dataset (datasets=12, preview, xlsx, csv exports), and /api/research/feeds (admin create/list/revoke, 403 for coach/athlete, 400 for unknown dataset, public CSV fetch without auth, anonymize column handling, access_count increment, 404 after revoke). Frontend UI verified: 3 tabs render on /staff/research-data, datasets export buttons live inside filter card, Adherence tab shows 16 athletes with 34% overall for 2026-07-01..2026-07-31 and tooltips/metric select (5 options) work, Sheets live tab creates a feed with correct =IMPORTDATA(\"<REACT_APP_BACKEND_URL>/api/research/feed/<token>.csv\") formula and revokes successfully. Mobile 390px has no horizontal overflow on Adherence tab. All test-created feeds revoked.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Research Data (any tab load)", "issues": ["Recharts console warnings on page load: 'The width(-1) and height(-1) of chart should be greater than 0' (chart container renders with zero size until layout). Non-blocking but noisy; add minWidth/minHeight or render chart after mount."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_adherence_and_feeds.py",
+    "/app/test_reports/pytest/iter34_adherence.xml"
+  ],
+  "action_items": [
+    "(Optional) Fix Recharts container size warnings on Research Data page by giving the chart wrapper an explicit minHeight or deferring render until container has size."
+  ],
+  "critical_code_review_comments": [
+    "research_export_routes.py grew to 568 lines and now mixes exports, adherence, feeds and period-stats; consider splitting feeds + adherence into separate modules.",
+    "public_feed does not rate-limit or guard against very large datasets (e.g. ostrc_responses with no team filter) — a public URL that triggers heavy aggregation could be abused. Consider a hard row cap or 429 throttle per token.",
+    "Public feed CSV does not include a 'generated_at'/row-count comment line; researchers using IMPORTDATA won't easily know freshness.",
+    "_adherence double-queries daily_readiness / training_sessions / recovery_* (once here, once elsewhere in build()); fine for now but duplicates I/O when exporting adherence alongside other datasets."
+  ],
+  "updated_files": ["/app/backend/tests/test_adherence_and_feeds.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100% of tested flows"},
+  "test_credentials": "admin cristina.velez@brasillacrosse.com/123456 (staff); coach@brazillacrosse.com/staff123; lucas.silva@email.com/demo123",
+  "seed_data_creation": "None persisted. Created 2 feeds during backend tests and 1 feed during frontend UI test — all revoked. Verified GET /api/research/feeds returns [] at end.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "New endpoints live under /api/research: GET /adherence (admin), dataset adherence_weekly, POST/GET /feeds, DELETE /feeds/{id}, public GET /feed/{token}.csv. Research page now has 3 tabs. App 'today' ~2026-10-14, so period_days=30 feeds for morning_checkin legitimately return no_data (demo data is Jun-Jul 2026). Use start=2026-07-01&end=2026-07-31 for non-zero adherence."
+}

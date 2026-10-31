@@ -1,0 +1,25 @@
+{
+  "summary": "Verified Staff Dashboard mobile layout fix. Logged in as staff (cristina.velez) at mobile (390x844), tablet (768x1024), and desktop (1920x800) viewports. At all sizes document.scrollWidth == clientWidth and zero elements overflow the right edge (>vw+2px). Horizontal scroll attempt (window.scrollTo(500,0)) stayed at scrollX=0. Header title 'Brazil Lacrosse' and 'Staff Dashboard • Cristina Velez' are fully visible on mobile (title left=53, right=203). Header controls (CMJ Day, Recovery, Health, Report, Methodology, Rankings, export, notifications, avatar, theme toggle, logout) wrap onto multiple rows on mobile and remain reachable. Theme toggle and logout buttons are present, visible, and clickable on mobile. Scrolling the dashboard (readiness chart, sidebar, bottom tables) preserved zero horizontal overflow.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Staff Dashboard (all viewports)", "issues": ["Recharts console warnings: 'width(-1) and height(-1) of chart should be greater than 0' — non-blocking but indicates a chart container measuring 0 briefly during render; consider setting minWidth/minHeight on ResponsiveContainer."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Recharts ResponsiveContainer emits width(-1)/height(-1) warnings on Staff Dashboard — set explicit min dimensions or aspect to silence and avoid layout thrash.",
+    "StaffDashboard.js is large (>750 lines per file_of_reference); consider splitting header, KPI cards, charts, and tables into subcomponents for maintainability."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "test_credentials": "Used staff: cristina.velez@brasillacrosse.com / 123456 from /app/memory/test_credentials.md context",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Mobile-overflow fix on Staff Dashboard is verified across 390/768/1920 viewports. Header wraps correctly, no horizontal overflow, theme+logout clickable on mobile. Only remaining note is Recharts width/height warnings (cosmetic).",
+  "rca of the issue": "Original: header controls row used sm:flex-nowrap causing children (multiple nav buttons) to overflow horizontally, especially on mobile, producing scrollWidth 2051 > clientWidth. Fix (already applied by main agent): allowed flex-wrap on all breakpoints, added flex-wrap justify-end to inner nav row, and added overflow-x-hidden to root. Verified at mobile 390: scrollWidth=390=clientWidth, 0 overflowing elements."
+}

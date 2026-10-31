@@ -1,0 +1,199 @@
+{
+  "typography": {
+    "font_family": {
+      "heading": "Chivo, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "weights": {
+      "heading": "900",
+      "subheading": "700",
+      "body": "400",
+      "bold": "600"
+    },
+    "sizes": {
+      "h1": "text-4xl md:text-6xl tracking-tighter",
+      "h2": "text-3xl md:text-4xl tracking-tight",
+      "h3": "text-2xl md:text-3xl tracking-tight",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm tracking-wide uppercase"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');"
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "name": "Brazil Yellow",
+        "hex": "#FFCC00",
+        "hsl": "48 100% 50%",
+        "usage": "Primary Actions, CTAs, Highlights, Active States"
+      },
+      "secondary": {
+        "name": "Brazil Blue",
+        "hex": "#002776",
+        "hsl": "220 100% 23%",
+        "usage": "Brand Identity, Headers, Accents"
+      },
+      "accent": {
+        "name": "Amazon Green",
+        "hex": "#009C3B",
+        "hsl": "143 100% 31%",
+        "usage": "Success States, Positive Metrics, Safe Zones"
+      },
+      "background": {
+        "name": "Deep Void Navy",
+        "hex": "#02040A",
+        "hsl": "225 60% 2%",
+        "usage": "App Background (Dark Mode Default)"
+      },
+      "surface": {
+        "name": "Navy Glass",
+        "hex": "#0A1025",
+        "hsl": "226 57% 9%",
+        "usage": "Cards, Modals, Sidebars"
+      },
+      "text": {
+        "primary": "#FFFFFF",
+        "secondary": "#94A3B8",
+        "muted": "#475569"
+      },
+      "functional": {
+        "success": "#009C3B",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "info": "#3B82F6"
+      }
+    },
+    "theme_config": {
+      "light": {
+        "background": "210 40% 98%",
+        "foreground": "222 47% 11%",
+        "card": "0 0% 100%",
+        "card_foreground": "222 47% 11%",
+        "popover": "0 0% 100%",
+        "popover_foreground": "222 47% 11%",
+        "primary": "220 100% 23%",
+        "primary_foreground": "48 100% 50%",
+        "secondary": "48 100% 50%",
+        "secondary_foreground": "220 100% 23%",
+        "muted": "210 40% 96.1%",
+        "muted_foreground": "215.4 16.3% 46.9%",
+        "accent": "210 40% 96.1%",
+        "accent_foreground": "222 47% 11%",
+        "destructive": "0 84.2% 60.2%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "214.3 31.8% 91.4%",
+        "input": "214.3 31.8% 91.4%",
+        "ring": "220 100% 23%"
+      },
+      "dark": {
+        "background": "225 60% 2%",
+        "foreground": "210 40% 98%",
+        "card": "226 57% 9%",
+        "card_foreground": "210 40% 98%",
+        "popover": "226 57% 9%",
+        "popover_foreground": "210 40% 98%",
+        "primary": "48 100% 50%",
+        "primary_foreground": "220 100% 23%",
+        "secondary": "220 100% 23%",
+        "secondary_foreground": "210 40% 98%",
+        "muted": "217.2 32.6% 17.5%",
+        "muted_foreground": "215 20.2% 65.1%",
+        "accent": "217.2 32.6% 17.5%",
+        "accent_foreground": "210 40% 98%",
+        "destructive": "0 62.8% 30.6%",
+        "destructive_foreground": "210 40% 98%",
+        "border": "217.2 32.6% 17.5%",
+        "input": "217.2 32.6% 17.5%",
+        "ring": "48 100% 50%"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "heavy": "bg-background/80 backdrop-blur-xl border border-white/10",
+      "light": "bg-white/5 backdrop-blur-md border border-white/5"
+    },
+    "gradients": {
+      "brazil_glow": "bg-gradient-to-r from-[#002776] to-[#009C3B]",
+      "dark_fade": "bg-gradient-to-b from-transparent to-background"
+    },
+    "shadows": {
+      "neon": "shadow-[0_0_20px_rgba(255,204,0,0.3)]",
+      "card": "shadow-xl shadow-black/20"
+    },
+    "borders": {
+      "subtle": "border border-white/10",
+      "active": "border border-[#FFCC00]/50"
+    }
+  },
+  "layout": {
+    "grid_system": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6 p-6",
+      "mobile_form": "flex flex-col gap-6 p-4 max-w-md mx-auto"
+    },
+    "spacing": {
+      "section_gap": "gap-8 md:gap-12",
+      "card_padding": "p-6 md:p-8",
+      "container_padding": "px-4 md:px-8 lg:px-12"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider rounded-md shadow-[0_0_15px_rgba(255,204,0,0.4)] transition-all hover:scale-105",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold uppercase tracking-wider rounded-md border border-white/10",
+      "ghost": "hover:bg-white/10 text-foreground font-medium"
+    },
+    "cards": {
+      "dashboard": "bg-card text-card-foreground rounded-xl border border-white/5 shadow-2xl backdrop-blur-sm",
+      "metric": "bg-gradient-to-br from-card to-card/50 border border-white/5 rounded-xl p-6 relative overflow-hidden"
+    },
+    "inputs": {
+      "default": "bg-background/50 border-white/10 focus:border-primary focus:ring-primary/20 rounded-md h-12 text-lg"
+    }
+  },
+  "images": {
+    "hero_backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1575049159608-99f2b7e789d9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwxfHxsYWNyb3NzZSUyMHBsYXllciUyMGFjdGlvbiUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2Njc5NjE4MHww&ixlib=rb-4.1.0&q=85",
+        "description": "Lacrosse goal at night - Use for Login/Landing background with heavy overlay",
+        "category": "background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1675855545269-ac1eb48a4aba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1NzZ8MHwxfHNlYXJjaHwxfHxicmF6aWwlMjBmbGFnJTIwdGV4dHVyZSUyMGFic3RyYWN0fGVufDB8fHx8MTc2Njc5NjE4Mnww&ixlib=rb-4.1.0&q=85",
+        "description": "Brazil Flag Texture - Use for subtle headers or card backgrounds (opacity 10%)",
+        "category": "texture"
+      }
+    ],
+    "placeholders": [
+      {
+        "url": "https://images.unsplash.com/photo-1612374375120-3d125dc41887?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHxsYWNyb3NzZSUyMHBsYXllciUyMGFjdGlvbiUyMGRhcmslMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2Njc5NjE4MHww&ixlib=rb-4.1.0&q=85",
+        "description": "Athlete Action Shot - Use for Athlete Profile placeholder",
+        "category": "athlete"
+      }
+    ]
+  },
+  "charts": {
+    "library": "recharts",
+    "colors": ["#FFCC00", "#009C3B", "#002776", "#EF4444", "#3B82F6"],
+    "style": {
+      "grid": "stroke-white/5",
+      "tooltip": "bg-card border-white/10 text-card-foreground rounded-lg shadow-xl",
+      "text": "fill-muted-foreground text-xs font-mono"
+    }
+  },
+  "universal_guidelines": [
+    "DARK MODE IS MANDATORY: The app must default to dark mode. Use the 'dark' class on the html/body tag.",
+    "NO GENERIC GRADIENTS: Avoid simple linear gradients. Use mesh gradients or noise textures if needed.",
+    "DATA DENSITY: Staff dashboards should be dense (Bento Grid). Athlete screens should be spacious (Focus Mode).",
+    "INTERACTIVE FEEDBACK: Every button press must have a scale or brightness effect.",
+    "ACCESSIBILITY: Ensure the Yellow (#FFCC00) text is only used on very dark backgrounds. On light backgrounds, use Blue (#002776).",
+    "NO DEFAULT SHADCN: Override the default 'slate' look with our custom Navy/Yellow theme.",
+    "MOBILE FIRST: The Athlete App must be fully optimized for touch (44px+ touch targets).",
+    "USE SONNER: For all notifications/toasts.",
+    "USE LUCIDE-REACT: For icons."
+  ],
+  "instructions_to_main_agent": "1. Update tailwind.config.js with the colors provided in 'theme_config'. 2. Update index.css with the CSS variables. 3. Install 'recharts' for analytics. 4. Create a 'Layout' component that handles the sidebar (Staff) vs bottom nav (Athlete) logic. 5. Use the provided image URLs for the login screen and dashboard headers."
+}

@@ -1,0 +1,88 @@
+{
+  "summary": "End-to-end validation of the new Event Report feature (Staff/Admin). Backend pytest 12/12 PASS on /app/backend/tests/test_event_report.py covering endpoint shape, KPIs, daily series (14 days), pain population in rich range, >=5 insights, team filter, empty future range (N/A), individual athlete endpoint, and access control (athlete -> 403, unauthenticated -> 401). Frontend live UI on preview URL verified: nav link, all 15 sections, KPI cards, filters (date + team + view), Executive/Complete view switching hides/shows sections correctly, athlete modal opens via risk-row click and shows Individual Report with summary + readiness sparkline + pain regions, CSV export downloads file 'event-report_2026-06-05_2026-06-18.csv', team comparison headers 'Metric/All/Men/Women/Interpretation', empty-range 2026-08-01..08-05 shows N/A / Insufficient data on all sections without crash.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Event Report – Individual Athlete modal",
+        "issues": [
+          "Radix a11y warning in console: 'Missing Description or aria-describedby={undefined} for {DialogContent}'. Add a DialogDescription (or VisuallyHidden Description) inside DialogContent to silence the warning."
+        ]
+      },
+      {
+        "screen": "Event Report – all Recharts containers",
+        "issues": [
+          "Many console warnings 'The width(-1) and height(-1) of chart should be greater than 0' fire during first paint (before ChartFrame gets its measured height). Non-blocking but noisy. Consider giving ChartFrame an explicit minHeight or rendering charts only after the wrapper has measured size."
+        ]
+      },
+      {
+        "screen": "Event Report – Executive Summary on empty range",
+        "issues": [
+          "For 2026-08-01..2026-08-05 (no data), summary still reads 'The main positive was consistent daily data collection' despite 0.0% adherence. Consider suppressing the 'main positive/attention' sentence when adherence == 0 or when no check-ins exist so the text does not read as if the event went well with 0 data."
+        ]
+      }
+    ]
+  },
+  "passed_tests": [
+    "BACKEND GET /api/staff/event-report 2026-06-05..2026-06-18 -> 200 with all 18 top-level keys (meta, header, kpis, executive_summary, daily, team_comparison, team_profiles, compliance, readiness, pain, load, recovery, availability, rankings, insights, recommendations, data_quality, athletes)",
+    "BACKEND KPIs populated: athletes=16, adherence=90.2%, readiness=6.6/10, sleep=7/10; header.actual_checkins=202/224",
+    "BACKEND daily series length == 14 with correct first/last dates",
+    "BACKEND pain.total_reports=70 (>0) and athletes_reporting>0 in rich range",
+    "BACKEND >=5 insight cards, each with priority in {high,moderate,low}",
+    "BACKEND team=Brazil Lacrosse Men filters to a single team; team_comparison length == 1; athletes[].team subset of {Men}",
+    "BACKEND empty future range 2026-08-01..08-05 -> kpis.readiness null, pain.total_reports=0, header.actual_checkins=0, daily length=5 with checkins=0",
+    "BACKEND GET /api/staff/event-report/athlete/{aid} 2026-06-05..06-18 -> 200 with athlete.summary and readiness_series",
+    "BACKEND athlete individual endpoint on empty range returns 200 or 404 (both acceptable)",
+    "BACKEND access control: athlete token gets 403 on /staff/event-report and /staff/event-report/athlete/{id}",
+    "BACKEND unauthenticated request returns 401/403",
+    "FRONTEND staff login -> /staff, event-report-nav-btn visible, click navigates to /staff/event-report",
+    "FRONTEND date filters er-start-date/er-end-date accept 2026-06-05/2026-06-18, report re-fetches and renders",
+    "FRONTEND KPI cards render: kpi-athletes=16, kpi-adherence=90.2%, kpi-readiness=6.6/10, kpi-sleep=7/10",
+    "FRONTEND all 15 sections present (#summary, #kpis, #overview, #teams, #compliance, #readiness, #pain, #load, #recovery, #availability, #rankings, #team-profiles, #insights, #recommendations, #quality)",
+    "FRONTEND rank-top-adherence + rank-low-adherence rendered; 7 insight-card items (>=5 required); 12 risk-row entries",
+    "FRONTEND View switch to Executive hides #compliance and #readiness (matching VIEW_SECTIONS.executive); switching back to Complete restores them",
+    "FRONTEND clicking a risk-row opens athlete-report-modal + individual-report with athlete name, compliance, readiness sparkline, pain-region badges (Hip/Groin, Wrist/Hand, Neck, Shoulder, Elbow) — real data (no fabrication)",
+    "FRONTEND er-export-csv click triggers download named 'event-report_2026-06-05_2026-06-18.csv'",
+    "FRONTEND Team Comparison table headers: ['Metric','All','Men','Women','Interpretation']",
+    "FRONTEND Empty range 2026-08-01..08-05 -> kpi-readiness shows 'N/A / Insufficient data'; header shows 0/80 check-ins, 0 pain reports, 0 alerts; charts render 'Insufficient data for this period' placeholders — no crash",
+    "ACCESS CONTROL (backend-verified): athlete lucas.silva@email.com token receives HTTP 403 on both event-report endpoints"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_event_report.py",
+    "/app/test_reports/pytest/event_report.xml"
+  ],
+  "action_items": [
+    "OPTIONAL / A11Y: Add DialogDescription (or VisuallyHidden one) inside the athlete-report-modal DialogContent in /app/frontend/src/pages/staff/EventReport.js (line ~707) to silence 'Missing Description' Radix warning.",
+    "OPTIONAL / CONTENT: In event_report_routes.py executive_summary builder, guard the 'main positive/attention point' sentence so it is NOT emitted when compliance.rate == 0 or overall.readiness is None (e.g., for the empty date range). Currently it says 'main positive was consistent daily data collection' even with 0% adherence.",
+    "OPTIONAL / UX: Recharts logs many 'width(-1)/height(-1)' warnings on first paint. Give ChartFrame an explicit minHeight (e.g., min-h-[220px]) or render chart only after ResponsiveContainer has size to remove noise."
+  ],
+  "critical_code_review_comments": [
+    "event_report_routes.py is 749 lines with a single build_report function of ~550 lines. It works and is well-organized by section, but is above the 700-line soft limit and would benefit from being split into helpers per section (compliance, readiness, pain, load, recovery, availability, insights) in a package to make each section unit-testable in isolation.",
+    "EventReport.js is 855 lines including 8+ inline sub-components (HeaderStat, MiniStat, CompareRow, ProfileList, RecBlock, IndividualReport, plus helpers). Extract IndividualReport and the compare/rec/profile helpers into /components/eventreport/ (similar to primitives.jsx) to bring EventReport.js under ~500 lines.",
+    "EventReport athlete modal uses DialogContent without a DialogDescription — same a11y issue previously reported for recovery-proofs lightbox. Consider a shared wrapper component that enforces a description slot.",
+    "exportCSV builds CSV manually via string concatenation — fine for small payloads but consider using PapaParse (already in-tree if not, add) to correctly handle embedded newlines/quotes in athlete names or region labels.",
+    "Route /event-report is registered as a duplicate of /staff/event-report (App.js lines 79-80). Not harmful but worth deduping to reduce ambiguity in nav/analytics.",
+    "event_report_routes.py uses `.to_list(50000)` for each of readiness/recovery/sessions/alerts. For long seasons this can grow — consider a stricter, indexed query (e.g., pre-filter sessions by regex on date_time_start prefix, or store a normalized 'date' field) so the Python-side filter `sessions = [s for s in sessions if start <= (s.get('date_time_start') or '')[:10] <= end]` isn't needed."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_event_report.py (new, 12 tests all passing)"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12)",
+    "frontend": "100% on all required flows (nav, filters, view-switch, KPIs, sections, athlete modal, CSV, empty-state)"
+  },
+  "test_credentials": {
+    "staff": "cristina.velez@brasillacrosse.com / 123456",
+    "athlete": "lucas.silva@email.com / demo123"
+  },
+  "seed_data_creation": "No new seed data created for this iteration. Existing demo data (from /api/seed-demo, ~45 days ending near 2026-06-20) was sufficient for the rich range 2026-06-05..2026-06-18.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Event Report endpoints: GET /api/staff/event-report?start_date&end_date&team&athlete_id&event_id and GET /api/staff/event-report/athlete/{aid}. Both require staff token (user_type=='staff'), athlete tokens return 403. Rich data window with populated pain/load/recovery: 2026-06-05..2026-06-18 (14 days). Empty window: 2026-08-01..08-05 (returns 200 with N/A/Insufficient placeholders — do NOT expect an error). Frontend default is 2026-06-24..06-29 which has NO data — always change dates when validating. Key data-testids on the page: event-report-nav-btn, er-back, er-refresh, er-export-csv, er-export-pdf, er-event-select, er-start-date, er-end-date, er-team-select, er-view-select, er-anon-toggle, kpi-athletes, kpi-adherence, kpi-readiness, kpi-sleep, rank-top-adherence, rank-low-adherence, insight-card, risk-row-<athleteId>, athlete-report-modal, individual-report. Section anchors: #summary #kpis #overview #teams #compliance #readiness #pain #load #recovery #availability #rankings #team-profiles #insights #recommendations #quality. View 'Executive' hides compliance/readiness/pain/load/recovery/availability/rankings/team-profiles sections (per VIEW_SECTIONS.executive).",
+  "rca of the issue": "No blocking bugs. Three optional design/content refinements only (a11y DialogDescription, empty-range executive-summary wording, Recharts width/height warnings)."
+}

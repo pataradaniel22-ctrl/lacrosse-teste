@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* NCA Black & White Theme - Light Mode (not used, dark by default) */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
+    --radius: 0.5rem;
+    /* Chart colors - semantic only */
+    --chart-1: 142 76% 36%;
+    --chart-2: 47 96% 53%;
+    --chart-3: 24 95% 53%;
+    --chart-4: 0 84% 60%;
+    --chart-5: 217 91% 60%;
+  }
+
+  .dark {
+    /* NCA Black & White Theme - Dark Mode (default) */
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 83%;
+    /* Chart colors - semantic only (kept for data visualization) */
+    --chart-1: 142 76% 36%;
+    --chart-2: 47 96% 53%;
+    --chart-3: 24 95% 53%;
+    --chart-4: 0 62.8% 50%;
+    --chart-5: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    @apply dark;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass-heavy {
+    @apply bg-zinc-900/80 backdrop-blur-xl border border-zinc-800;
+  }
+  
+  .glass-light {
+    @apply bg-zinc-800/50 backdrop-blur-md border border-zinc-700/50;
+  }
+  
+  .neon-shadow {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  
+  .neon-shadow-hover:hover {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+  }
+  
+  .gradient-nca {
+    background: linear-gradient(to right, #18181b, #3f3f46);
+  }
+  
+  .text-gradient-nca {
+    background: linear-gradient(to right, #fafafa, #a1a1aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Touch targets for mobile */
+@media (max-width: 768px) {
+  button, 
+  [role="button"],
+  input,
+  select,
+  textarea,
+  a {
+    min-height: 44px;
+  }
+}
