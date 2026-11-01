@@ -75,6 +75,24 @@ Pendências de segurança conhecidas (não corrigir sem o usuário pedir):
 - Não existe tela de "alterar senha".
 - `CORS_ORIGINS="*"` no Render.
 
+## Acompanhamento ao vivo (como no Emergent)
+
+O usuário quer ver o trabalho acontecendo, não só o resultado. Durante cada mudança:
+
+- **Início:** mandar (com `SendUserMessage`) o plano em 2–4 passos simples e criar a
+  lista de tarefas, marcando cada passo ao concluir.
+- **Print "antes":** se a mudança afeta uma tela, abrir a tela no navegador do app
+  (Claude_Browser) e enviar um print de como ela está hoje, antes de alterar.
+- **A cada passo concluído:** uma mensagem curta com `SendUserMessage` dizendo o que
+  foi alterado, em linguagem simples (ex.: "Criei a função no servidor que confere a
+  senha atual"), e o nome do arquivo entre parênteses.
+- **Durante a verificação no ar:** manter o navegador do app visível (pedir ao
+  usuário Ctrl+Shift+B / Cmd+Shift+B se estiver escondido) para ele acompanhar os
+  cliques, e enviar cada print assim que for tirado (`SendUserFile`), sem esperar o
+  fim.
+- **Print "depois":** mesma tela do print "antes", para comparar.
+- Problemas encontrados no caminho são avisados na hora, não só no relatório.
+
 ## Formato do relatório final
 
 ```
