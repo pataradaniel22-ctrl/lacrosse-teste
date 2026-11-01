@@ -50,6 +50,7 @@ import {
   Send,
   MessageSquare,
   ClipboardList,
+  ClipboardPlus,
   ClipboardCheck,
   Stethoscope,
   Brain,
@@ -830,6 +831,7 @@ export default function StaffDashboard() {
                             <Item icon={ShieldCheck} color="text-emerald-400" label="Recovery" testid="recovery-intel-nav-btn" onClick={() => navigate('/staff/recovery-intelligence')} />
                             <Item icon={HeartPulse} color="text-cyan-400" label="Health" testid="health-nav-btn" onClick={() => navigate('/staff/health')} />
                             <Item icon={Stethoscope} color="text-red-400" label="Pain" testid="pain-nav-btn" onClick={() => navigate('/staff/pain-management')} />
+                            <Item icon={ClipboardPlus} color="text-rose-400" label="Injury & Illness" testid="iir-nav-btn" onClick={() => navigate('/staff/injury-illness')} />
                             <Item icon={Brain} color="text-purple-400" label="Mental" testid="mental-health-nav-btn" onClick={() => navigate('/staff/mental-health')} />
                             <Item icon={Activity} color="text-violet-400" label="CMJ Day" testid="cmj-day-btn" onClick={() => setShowCMJModal(true)} />
                             <Item icon={Trophy} color="text-amber-400" label="Rankings" testid="rankings-nav-btn" onClick={() => navigate('/staff/rankings')} />

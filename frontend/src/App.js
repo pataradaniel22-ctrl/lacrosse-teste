@@ -33,6 +33,7 @@ import Methodology from "./pages/staff/Methodology";
 import Rankings from "./pages/staff/Rankings";
 import StaffNotifications from "./pages/staff/StaffNotifications";
 import StaffMessages from "./pages/staff/StaffMessages";
+import InjuryIllness from "./pages/staff/InjuryIllness";
 import TheFittest from "./pages/athlete/TheFittest";
 import TheFittestAdmin from "./pages/staff/TheFittestAdmin";
 import ResearchData from "./pages/staff/ResearchData";
@@ -107,6 +108,7 @@ function AppRoutes() {
       <Route path="/staff/rankings" element={<ProtectedRoute allowedType="staff"><Rankings /></ProtectedRoute>} />
       <Route path="/staff/notifications" element={<ProtectedRoute allowedType="staff"><StaffNotifications /></ProtectedRoute>} />
       <Route path="/staff/messages" element={<ProtectedRoute allowedType="staff"><StaffMessages /></ProtectedRoute>} />
+      <Route path="/staff/injury-illness" element={<ProtectedRoute allowedType="staff"><InjuryIllness /></ProtectedRoute>} />
       <Route path="/staff/messages/:id" element={<ProtectedRoute allowedType="staff"><StaffMessages /></ProtectedRoute>} />
       <Route path="/staff/profile" element={<ProtectedRoute allowedType="staff"><ProfileSettings /></ProtectedRoute>} />
       
