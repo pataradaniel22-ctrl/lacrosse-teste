@@ -50,9 +50,12 @@ backend), em 3–5 minutos. Não existe ambiente de homologação: tudo que vai 
    se houver novas contas de teste, `memory/test_credentials.md` (arquivo
    ignorado pelo git; nunca colocar senhas reais no repositório).
 
-Se o site/backend publicados não forem acessíveis deste ambiente (rede
-bloqueada), avisar o usuário e pedir que libere os domínios em
-Configurações → Capacidades do claude.ai, ou que mande prints.
+Se o site/backend publicados não forem acessíveis do shell (rede bloqueada),
+usar o navegador do app Claude no computador do usuário (ferramentas
+`Claude_Browser`): prints com `computer` → `screenshot` (testar também com
+`resize_window` preset `mobile`), erros com `read_console_messages`, e chamadas à
+API com `javascript_tool` (`fetch`, o CORS permite). Se nem isso estiver
+disponível, pedir prints ao usuário.
 
 ## Checklist de segurança (toda mudança)
 

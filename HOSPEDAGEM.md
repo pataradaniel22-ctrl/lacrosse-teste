@@ -9,7 +9,7 @@ Versão de teste do app, hospedada fora do Emergent. O app original
 |---|---|---|
 | Site (React) | Vercel | https://lacrosse-teste-virid.vercel.app |
 | Backend (FastAPI) | Render | https://lacrosse-teste-api.onrender.com |
-| Banco de dados | MongoDB Atlas | `cluster0.sanvyfd.mongodb.net` (região São Paulo) |
+| Banco de dados | MongoDB Atlas (projeto `lacrosse-eua`) | `cluster0.v9cvq1j.mongodb.net` (AWS N. Virginia, us-east-1) |
 
 Fotos e PDFs ficam guardados no próprio MongoDB (GridFS, coleção `uploads`).
 
@@ -31,5 +31,10 @@ sozinhos em 3–5 minutos.
 
 ## Observações
 
-- O plano gratuito do Render "dorme" após 15 minutos sem uso; o primeiro acesso depois disso pode levar cerca de 1 minuto.
+- O plano gratuito do Render "dorme" após 15 minutos sem uso. Para evitar isso, o
+  cron-job.org (job "Manter lacrosse acordado") acessa `/api/` a cada 10 minutos.
+- Backend (Render, Virginia) e banco (Atlas, us-east-1) ficam na mesma região, perto
+  dos atletas nos EUA. O banco antigo em São Paulo (`cluster0.sanvyfd`, "Project 0")
+  não é mais usado.
+- O login leva ~1,7 s por causa da verificação de senha (bcrypt) no servidor gratuito.
 - As chaves de notificação push são geradas automaticamente e salvas no banco (coleção `app_settings`).
