@@ -24,9 +24,13 @@ backend), em 3–5 minutos. Não existe ambiente de homologação: tudo que vai 
 
 ## Fluxo obrigatório a cada pedido de mudança (igual ao Emergent)
 
-1. **Entender e planejar.** Confirmar em uma frase o que vai ser feito. Se o pedido
-   for ambíguo ou arriscado (apagar dados, mexer em login/permissões), perguntar
-   antes. Criar uma lista de tarefas quando houver mais de 2 passos.
+1. **Entender e planejar.** Dizer em uma frase o que vai ser feito e **seguir direto,
+   sem pedir confirmação** — o usuário autorizou fazer as mudanças sem perguntar.
+   Se algo for ambíguo, escolher a interpretação mais razoável, dizer qual foi e
+   seguir. Criar uma lista de tarefas quando houver mais de 2 passos.
+   **Só perguntar antes** quando a ação não tiver volta ou afetar pessoas/custos:
+   apagar dados reais do banco, trocar senha/acesso de usuários reais, mexer no
+   repositório `lacrosse2`/Emergent, ou qualquer coisa que gere cobrança.
 2. **Implementar** no menor escopo possível, seguindo o estilo do código existente
    (UUIDs em vez de ObjectId, excluir `_id` nas respostas, `data-testid` em
    elementos interativos novos, textos da interface em português).
