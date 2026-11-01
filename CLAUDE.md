@@ -72,7 +72,6 @@ Pendências de segurança conhecidas (não corrigir sem o usuário pedir):
 - `/api/seed-demo` é público e cria dados/contas de demonstração.
 - Contas demo com senhas fracas (ex.: admin `cristina.velez@brasillacrosse.com`) —
   o usuário pediu para manter.
-- Não existe tela de "alterar senha".
 - `CORS_ORIGINS="*"` no Render.
 
 ## Acompanhamento ao vivo (como no Emergent)

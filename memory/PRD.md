@@ -265,3 +265,6 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Backlog: direct Google Sheets sync (OAuth), saved export presets, data dictionary sheet per column.
 - 2026-10: Research Data tabs — **Adherence** (per athlete x week heatmap: morning days/7, OSTRC weekly, recovery days/7, training count; overall = mean of the 3 %; export xlsx/csv; dataset `adherence_weekly`) and **Google Sheets live** (secret revocable CSV feeds `/api/research/feed/<token>.csv` for `=IMPORTDATA()`, rolling window, anonymize; collection `research_feeds`). Tested iteration_34 (100%).
 - 2026-10: **Data Dictionary** (English) — `backend/data_dictionary.py` documents every exported column (description, type, unit, scale/values, reference: OSTRC-H2 Clarsen 2020, sRPE Foster 2001, NRS, CMJ). Auto-added as "Data Dictionary" sheet in every XLSX export, `data_dictionary.csv` in every ZIP; standalone `GET /api/research/dictionary?datasets=&format=xlsx|csv` (buttons research-dictionary-btn, health-dictionary-btn). README substantial rule fixed (Q1 d or Q2/Q3 c/d). Mobile fix: switches/checkboxes excluded from 44px min-height rule. Self-tested (curl + UI downloads).
+
+## Change Log (hospedagem fora do Emergent)
+- 2026-11-01: Removed "Combined Load × Health Risk" card from the Staff Dashboard (not used). The backend route `/api/health/staff/combined-risk` was kept.
