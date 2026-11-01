@@ -11,6 +11,7 @@ Two connected apps for athlete monitoring and workload management for Brazil Lac
 - Self-registration for athletes with admin approval workflow
 - **Staff Registration**: Staff can register with Coach/Physio/Research roles
 - **Admin Definition**: Single predefined admin (pataradaniel@gmail.com)
+- **Change Password**: ✅ NEW - Added 2026-11-01 — card on Profile Settings (athletes and staff); `PUT /api/auth/change-password` requires login + current password, new password ≥ 8 chars and different from the current one
 
 ### Role Permissions:
 - **Athletes**: Can log daily data, view own history
