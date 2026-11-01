@@ -144,3 +144,6 @@ frontend/node_modules/.cache/default-development/111.pack
 .env
 .env.*
 *.env
+
+# QA (prints e relatórios locais)
+qa-shots/
