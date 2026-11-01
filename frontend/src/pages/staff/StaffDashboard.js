@@ -275,7 +275,6 @@ export default function StaffDashboard() {
   const [nonResponders, setNonResponders] = useState(null);
   const [workloadMetrics, setWorkloadMetrics] = useState(null);
   const [loadMonitoring, setLoadMonitoring] = useState(null);
-  const [combinedRisk, setCombinedRisk] = useState(null);
   const [loadDays, setLoadDays] = useState(7);
   const [loadLoading, setLoadLoading] = useState(false);
   // Readiness chart date range: { days: N } preset OR { start, end? } custom range (end omitted = up to today)
@@ -395,13 +394,6 @@ export default function StaffDashboard() {
       const sep = teamP ? '&' : '?';
       const res = await axios.get(`${API}/staff/dashboard/load-monitoring${teamP}${sep}days=${days}`, getAuthHeaders());
       setLoadMonitoring(res.data);
-      try {
-        const teamQ = teamFilter !== 'all' ? `?team=${teamFilter}&days=${days}` : `?days=${days}`;
-        const crRes = await axios.get(`${API}/health/staff/combined-risk${teamQ}`, getAuthHeaders());
-        setCombinedRisk(crRes.data);
-      } catch (e) {
-        setCombinedRisk(null);
-      }
     } catch (error) {
       console.error('Failed to load load-monitoring data');
     } finally {
@@ -1236,75 +1228,6 @@ export default function StaffDashboard() {
                       </>
                     )}
                     <ChartCaption metricKey="teamLoadMonitoring" />
-                  </CardContent>
-                </Card>
-
-                {/* Combined Load × Health Risk — cross-reference of high load with elevated OSTRC-H2 health problems */}
-                <Card className="glass-light border-white/5">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <HeartPulse className="w-4 h-4 text-rose-400" />
-                      Combined Load &times; Health Risk
-                      <span className="text-[10px] text-muted-foreground font-normal">(last {loadDays}d)</span>
-                      <HelpTooltip metricKey="combinedRisk" />
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent data-testid="combined-risk-card">
-                    {!combinedRisk || (combinedRisk.combined_risk_count || 0) === 0 ? (
-                      <div className="py-6 text-center">
-                        <p className="text-sm text-muted-foreground" data-testid="combined-risk-empty">
-                          No athletes are currently both high-load and reporting an elevated health problem.
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2 mb-3">
-                          <Badge variant="outline" className="border-rose-500/40 text-rose-300 text-[11px]">
-                            {combinedRisk.combined_risk_count} athlete(s) flagged
-                          </Badge>
-                          <span className="text-[11px] text-muted-foreground">
-                            High training load + substantial / elevated health problem
-                          </span>
-                        </div>
-                        <div className="space-y-2">
-                          {combinedRisk.combined_risk_athletes.map((a) => (
-                            <button
-                              key={a.athlete_id}
-                              type="button"
-                              onClick={() => navigate(`/staff/athlete/${a.athlete_id}`)}
-                              className="w-full flex items-start justify-between gap-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 transition-colors text-left"
-                              data-testid={`combined-risk-${a.athlete_id}`}
-                            >
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                                  <span className="text-sm font-medium truncate">{a.name}</span>
-                                  {a.substantial && (
-                                    <Badge variant="outline" className="border-rose-500/40 text-rose-300 text-[9px]">Substantial</Badge>
-                                  )}
-                                  {a.availability && a.availability !== 'full' && (
-                                    <Badge variant="outline" className="border-amber-500/40 text-amber-300 text-[9px] capitalize">{a.availability}</Badge>
-                                  )}
-                                </div>
-                                <ul className="mt-1 ml-4 space-y-0.5">
-                                  {a.factors.map((f, i) => (
-                                    <li key={i} className="text-[11px] text-rose-200/80 list-disc list-inside">{f}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <span className="block text-sm font-mono font-bold text-rose-400">{a.total_load} AU</span>
-                                <span className="block text-[10px] text-rose-300">Severity {a.current_severity}/100</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-3">
-                          {combinedRisk.disclaimer}
-                        </p>
-                      </>
-                    )}
-                    <ChartCaption metricKey="combinedRisk" />
                   </CardContent>
                 </Card>
 
