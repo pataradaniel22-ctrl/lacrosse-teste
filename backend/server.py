@@ -735,6 +735,46 @@ async def update_profile(name: Optional[str] = None, current_user: dict = Depend
     
     return {"message": "Profile updated successfully"}
 
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+PASSWORD_MIN_LENGTH = 8
+
+
+@api_router.put("/auth/change-password")
+async def change_password(data: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """Let the logged-in user (athlete or staff) change their own password."""
+    user_type = current_user['user_type']
+    user_id = current_user['user']['id']
+    collection = db.athletes if user_type == 'athlete' else db.staff_users
+
+    record = await collection.find_one({"id": user_id}, {"_id": 0, "password_hash": 1})
+    stored_hash = (record or {}).get('password_hash', '')
+    if not stored_hash or not verify_password(data.current_password, stored_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    new_password = data.new_password
+    if len(new_password) < PASSWORD_MIN_LENGTH:
+        raise HTTPException(status_code=400, detail=f"New password must be at least {PASSWORD_MIN_LENGTH} characters")
+    if len(new_password.encode('utf-8')) > 72:
+        # bcrypt only uses the first 72 bytes; refuse rather than silently truncate.
+        raise HTTPException(status_code=400, detail="New password is too long (max 72 characters)")
+    if new_password == data.current_password:
+        raise HTTPException(status_code=400, detail="New password must be different from the current one")
+
+    await collection.update_one(
+        {"id": user_id},
+        {"$set": {
+            "password_hash": hash_password(new_password),
+            "password_changed_at": datetime.now(timezone.utc).isoformat(),
+        }},
+    )
+    return {"message": "Password changed successfully"}
+
+
 @api_router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
     return current_user

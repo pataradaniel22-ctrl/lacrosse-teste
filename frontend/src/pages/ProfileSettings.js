@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Camera, User, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Camera, User, Save, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -19,6 +19,11 @@ export default function ProfileSettings() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [name, setName] = useState(user?.name || '');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Get the full photo URL
   const getPhotoUrl = (photoPath) => {
@@ -94,6 +99,43 @@ export default function ProfileSettings() {
       toast.error(error.response?.data?.detail || 'Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+    if (newPassword === currentPassword) {
+      toast.error('New password must be different from the current one');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await axios.put(
+        `${API}/auth/change-password`,
+        { current_password: currentPassword, new_password: newPassword },
+        getAuthHeaders()
+      );
+      toast.success('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -221,6 +263,78 @@ export default function ProfileSettings() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-light border-white/10 mt-6" data-testid="change-password-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" />
+              Change Password
+            </CardTitle>
+            <CardDescription>
+              Use at least 8 characters. You will stay logged in.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current password</Label>
+                <Input
+                  id="current-password"
+                  type={showPasswords ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="h-12 bg-background/50 border-white/10"
+                  data-testid="current-password-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New password</Label>
+                <Input
+                  id="new-password"
+                  type={showPasswords ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="h-12 bg-background/50 border-white/10"
+                  data-testid="new-password-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm new password</Label>
+                <Input
+                  id="confirm-password"
+                  type={showPasswords ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="h-12 bg-background/50 border-white/10"
+                  data-testid="confirm-password-input"
+                />
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">Passwords do not match</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPasswords((v) => !v)}
+                className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+                data-testid="toggle-password-visibility"
+              >
+                {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPasswords ? 'Hide passwords' : 'Show passwords'}
+              </button>
+              <Button
+                type="submit"
+                disabled={isChangingPassword}
+                className="w-full h-12"
+                data-testid="change-password-submit"
+              >
+                {isChangingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Update password'}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
