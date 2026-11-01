@@ -7149,6 +7149,10 @@ register_the_fittest_routes(api_router, db, get_current_user)
 from research_export_routes import register_research_routes  # noqa: E402
 register_research_routes(api_router, db, get_current_user)
 
+# Injury & Illness Recording (clinical surveillance module)
+from iir_routes import register_iir_routes  # noqa: E402
+register_iir_routes(api_router, db, get_current_user)
+
 # Include the router
 app.include_router(api_router)
 
