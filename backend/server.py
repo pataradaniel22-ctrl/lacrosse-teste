@@ -630,7 +630,7 @@ async def get_public_staff_roles():
     """Get list of staff roles available for public registration"""
     return {"roles": PUBLIC_STAFF_ROLES, "teams": [e.value for e in TeamEnum]}
 
-# Profile Photo Upload (persisted in Emergent Object Storage so it survives
+# Profile Photo Upload (persisted in object storage (MongoDB GridFS) so it survives
 # container restarts and works across multiple production replicas)
 from recovery_storage import put_object as _put_profile_object, get_object as _get_profile_object, APP_NAME as _STORAGE_APP  # noqa: E402
 

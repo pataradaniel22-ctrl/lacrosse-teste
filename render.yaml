@@ -1,0 +1,31 @@
+# Render Blueprint: backend (FastAPI) for the lacrosse-teste app.
+# In Render: New > Blueprint > choose this repository.
+services:
+  - type: web
+    name: lacrosse-teste-api
+    runtime: python
+    plan: free
+    region: virginia
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # MongoDB Atlas connection string (mongodb+srv://...). Paste it in Render.
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: lacrosse_teste
+      # Password for the admin account created on first start. Choose it in Render.
+      - key: ADMIN_INITIAL_PASSWORD
+        sync: false
+      # Random secret used to sign logins. Render generates it.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: VAPID_CONTACT_EMAIL
+        value: mailto:pataradaniel@gmail.com

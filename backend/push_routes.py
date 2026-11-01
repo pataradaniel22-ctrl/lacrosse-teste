@@ -45,7 +45,56 @@ class PushPreferences(BaseModel):
 
 
 # --- VAPID claims for pywebpush ---
+# Keys generated automatically (and kept in MongoDB) when none are configured
+# through environment variables, so a fresh deployment needs no manual setup.
+_db = None
+_vapid_pem_cache: Optional[str] = None
+
+
+async def _ensure_vapid_keys() -> None:
+    """Make sure a VAPID key pair is available.
+
+    Order: environment variables -> key pair stored in MongoDB -> generate a new
+    pair and store it (so it survives restarts and stays stable for subscribers).
+    """
+    global VAPID_PUBLIC_KEY, _vapid_pem_cache
+    if VAPID_PUBLIC_KEY and (os.environ.get("VAPID_PRIVATE_KEY_B64") or os.path.isfile(VAPID_PRIVATE_PEM_PATH)):
+        return
+    if _vapid_pem_cache and VAPID_PUBLIC_KEY:
+        return
+    if _db is None:
+        return
+    doc = await _db.app_settings.find_one({"_id": "vapid_keys"})
+    if not doc:
+        import base64
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        key = ec.generate_private_key(ec.SECP256R1())
+        pem = key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        ).decode("utf-8")
+        raw_pub = key.public_key().public_bytes(
+            serialization.Encoding.X962,
+            serialization.PublicFormat.UncompressedPoint,
+        )
+        pub = base64.urlsafe_b64encode(raw_pub).decode("ascii").rstrip("=")
+        doc = {"_id": "vapid_keys", "public_key": pub, "private_pem": pem}
+        try:
+            await _db.app_settings.insert_one(doc)
+            logger.info("Generated and stored a new VAPID key pair")
+        except Exception:
+            # Another worker stored one first: use that one.
+            doc = await _db.app_settings.find_one({"_id": "vapid_keys"})
+    VAPID_PUBLIC_KEY = doc["public_key"]
+    _vapid_pem_cache = doc["private_pem"]
+
+
 def _get_vapid_pem() -> str:
+    if _vapid_pem_cache:
+        return _vapid_pem_cache
     # Prefer the env-provided key (works in production where the gitignored
     # .pem file is absent); fall back to the local file for development.
     b64 = os.environ.get("VAPID_PRIVATE_KEY_B64")
@@ -69,6 +118,7 @@ async def send_push_to_subscription(subscription_doc: dict, payload: dict) -> st
       - "gone"  : subscription permanently expired (404/410) -> caller should delete it
       - "error" : transient failure (network/timeout/etc.) -> caller should KEEP the sub and retry later
     """
+    await _ensure_vapid_keys()
     try:
         webpush(
             subscription_info={
@@ -224,9 +274,12 @@ def start_reminder_scheduler(db):
 # --- Endpoints ---
 def register_push_routes(api_router, db, get_current_user):
     """Register all push routes on the existing api_router (so /api prefix is preserved)."""
+    global _db
+    _db = db
 
     @api_router.get("/push/vapid-public-key")
     async def get_vapid_public_key():
+        await _ensure_vapid_keys()
         return {"public_key": VAPID_PUBLIC_KEY}
 
     @api_router.get("/push/preferences")

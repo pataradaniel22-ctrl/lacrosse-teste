@@ -4,7 +4,7 @@ Recovery Points Ecosystem - Phase 1
 Athlete-facing recovery accountability system:
 - Recovery activities organized in categories (Gold/Silver/Bronze + custom)
 - Daily Recovery Points with a 100-point target (consistency, not perfection)
-- Mandatory proof upload (image/PDF) stored in Emergent Object Storage
+- Mandatory proof upload (image/PDF) stored in object storage (MongoDB GridFS)
 - Automatic OR staff approval (admin-configurable)
 - Daily score, colored progress, streaks, compliance %, motivational badges
 - Admin config of activities / categories / points / approval mode
