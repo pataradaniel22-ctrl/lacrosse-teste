@@ -300,3 +300,4 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 ## 2026-11-02 — Novo ícone do app
 - Ícone novo (triângulo amarelo em fundo azul-escuro) em todos os tamanhos: `frontend/public/icon-*.png`, `apple-touch-icon.png`, `favicon.ico`, `favicon-32.png`; selo de notificação Android `badge-96.png`. manifest, index.html (tela de carregamento) e service worker (cache v5) atualizados. Logos dentro das telas (brazil-lacrosse-logo.png) não mudaram.
 - 2026-11-02: ícone do Android (maskable) com o logo 72% do tamanho: `icon-maskable-192/512.png`; iPhone e computador continuam com o ícone cheio. Cache do service worker v6.
+- 2026-11-02: importação do Emergent confirmada pelo usuário (25 atletas e 1430 check-ins presentes no app).
