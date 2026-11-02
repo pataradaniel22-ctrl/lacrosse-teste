@@ -18,6 +18,16 @@ Time-loss convention ``IIR-TL-1`` (documented for research)
 """
 from datetime import date, datetime, timedelta
 
+try:  # calendar "today" follows the app's local timezone (US Eastern), not UTC
+    from app_time import local_now as _local_now
+except ImportError:  # pragma: no cover
+    _local_now = None
+
+
+def today():
+    return _local_now().date() if _local_now else date.today()
+
+
 MIN_YEAR = 1990
 MAX_YEAR = 2100
 PARTICIPATION_ORDER = {"unavailable": 3, "modified": 2, "unknown": 1, "full": 0}
@@ -78,7 +88,7 @@ def compat_time_loss_days(ep):
 
 def effective_time_loss(ep, cutoff=None):
     """Effective time loss (IIR-TL-1). Returns dict with value/state/start/end."""
-    cutoff = safe_date(cutoff) or date.today()
+    cutoff = safe_date(cutoff) or today()
     tl = ep.get("time_loss")
     start = safe_date(ep.get("unavailability_start"))
     imputed = False
@@ -117,7 +127,7 @@ def unavailability_interval(ep, cutoff=None):
         return None
     start = date.fromisoformat(tl["start"])
     if tl["state"] == "provisional":
-        end = (safe_date(cutoff) or date.today()) + timedelta(days=1)  # cut-off day counted as unavailable
+        end = (safe_date(cutoff) or today()) + timedelta(days=1)  # cut-off day counted as unavailable
         return start, end, True
     end = date.fromisoformat(tl["end"])
     return start, end, False
@@ -222,9 +232,9 @@ def _empty(v):
     return v is None or v == "" or v == []
 
 
-def quality_issues(ep, today=None):
+def quality_issues(ep, ref_date=None):
     """Non-blocking pending items and inconsistencies shown to the clinician."""
-    today = safe_date(today) or date.today()
+    ref = safe_date(ref_date) or today()
     kind = ep.get("kind")
     pending, warnings = [], []
     if ep.get("participant_type", "athlete") == "athlete" and not ep.get("athlete_id"):
@@ -234,7 +244,7 @@ def quality_issues(ep, today=None):
             pending.append(k)
 
     ev = safe_date(ep.get(event_date_key(kind)))
-    if ev and ev > today + timedelta(days=1):
+    if ev and ev > ref + timedelta(days=1):
         warnings.append(f"{event_date_key(kind)} is in the future")
     tl = ep.get("time_loss")
     if tl == "no" and (ep.get("unavailability_start") or ep.get("participation") == "unavailable"):

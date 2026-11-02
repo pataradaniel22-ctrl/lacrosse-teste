@@ -77,7 +77,7 @@ export default function EpisodeForm({ open, onOpenChange, kind, episode, prefill
       .catch(() => setPrevEpisodes([]));
   }, [open, v.athlete_id, episode, getAuthHeaders]);
 
-  const set = (key, value) => setV((s) => ({ ...s, [key]: value }));
+  const set = (key, value) => setV((s) => ({ ...s, [key]: typeof value === 'function' ? value(s[key]) : value }));
 
   const visible = (key) => {
     if (key === 'athlete') return v.participant_type !== 'other';
@@ -232,7 +232,7 @@ export default function EpisodeForm({ open, onOpenChange, kind, episode, prefill
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="text-xs">
             Fields marked <span className="text-primary">#n</span> follow the reference workbook ({k === 'injury' ? '30' : '21'} columns);
-            fields marked <span className="text-foreground">App</span> are additional. A draft can be saved incomplete — nothing has to be invented.
+            fields marked <span className="text-foreground">App</span> are additional; options ending in * were added by the app. A draft can be saved incomplete — nothing has to be invented.
           </DialogDescription>
         </DialogHeader>
 
@@ -278,6 +278,8 @@ export default function EpisodeForm({ open, onOpenChange, kind, episode, prefill
 
 /** Native select with option groups (group titles are never selectable). */
 export function GroupedSelect({ options, value, onChange, testid, placeholder = 'Select…' }) {
+  const mixed = (options || []).some((o) => !o.extension) && (options || []).some((o) => o.extension);
+  const star = (o) => (mixed && o.extension ? ' *' : '');
   const groups = [];
   const seen = {};
   (options || []).forEach((o) => {
@@ -290,15 +292,19 @@ export function GroupedSelect({ options, value, onChange, testid, placeholder = 
       <option value="">{placeholder}</option>
       {groups.map(({ g, items }) => (g ? (
         <optgroup key={g} label={g}>
-          {items.map((o) => <option key={o.code} value={o.code}>{o.label}{o.extension ? ' *' : ''}</option>)}
+          {items.map((o) => <option key={o.code} value={o.code}>{o.label}{star(o)}</option>)}
         </optgroup>
-      ) : items.map((o) => <option key={o.code} value={o.code}>{o.label}{o.extension ? ' *' : ''}</option>)))}
+      ) : items.map((o) => <option key={o.code} value={o.code}>{o.label}{star(o)}</option>)))}
     </select>
   );
 }
 
 function ChipMulti({ options, value, onChange, testid }) {
-  const toggle = (code) => onChange(value.includes(code) ? value.filter((c) => c !== code) : [...value, code]);
+  // functional update: safe with fast consecutive clicks
+  const toggle = (code) => onChange((prev) => {
+    const cur = prev || [];
+    return cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code];
+  });
   return (
     <div className="flex flex-wrap gap-1.5" data-testid={testid}>
       {(options || []).map((o) => {

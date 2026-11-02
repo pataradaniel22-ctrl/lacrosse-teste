@@ -368,7 +368,7 @@ def register_iir_routes(api_router, db, get_current_user):
         if kind_code not in T.option_codes("followup_kind"):
             raise HTTPException(status_code=400, detail="Invalid follow-up type")
         try:
-            fdate = L.parse_date(payload.get("date")) or date.today()
+            fdate = L.parse_date(payload.get("date")) or L.today()
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         ev_date = L.safe_date(ep.get(L.event_date_key(ep["kind"])))
@@ -556,7 +556,7 @@ def register_iir_routes(api_router, db, get_current_user):
         """Complaints from Pain Map / Daily Readiness / OSTRC that may need a clinical
         assessment. They become records only after a clinician confirms them."""
         _require(current_user, "clinical")
-        since = (date.today() - timedelta(days=max(1, min(days, 90)))).isoformat()
+        since = (L.today() - timedelta(days=max(1, min(days, 90)))).isoformat()
         decided = await db.iir_triage.find({}, {"_id": 0, "source": 1, "source_id": 1}).to_list(20000)
         done = {(d["source"], d["source_id"]) for d in decided}
         items = []
@@ -612,10 +612,7 @@ def register_iir_routes(api_router, db, get_current_user):
         return {"message": "Marked as assessed"}
 
     # Stage 4/5 routes (exposure, reports, exports) live in iir_reports.py
-    try:
-        from iir_reports import register_iir_report_routes
-        register_iir_report_routes(api_router, db, get_current_user, _require, _audit, _enrich, _athlete_map)
-    except ImportError:
-        pass
+    from iir_reports import register_iir_report_routes
+    register_iir_report_routes(api_router, db, get_current_user, _require, _audit, _enrich, _athlete_map)
 
     logger.info("Injury & Illness Recording routes registered (%s / %s)", T.FORM_VERSION, T.DICTIONARY_VERSION)
