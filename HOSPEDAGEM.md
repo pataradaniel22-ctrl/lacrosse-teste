@@ -7,7 +7,7 @@ Versão de teste do app, hospedada fora do Emergent. O app original
 
 | Parte | Serviço | Endereço |
 |---|---|---|
-| Site (React) | Vercel | https://lacrosse-teste-virid.vercel.app |
+| Site (React) | Vercel | https://dailycbl.com (domínio comprado no Vercel) · também https://lacrosse-teste-virid.vercel.app |
 | Backend (FastAPI) | Render | https://lacrosse-teste-api.onrender.com |
 | Banco de dados | MongoDB Atlas (projeto `lacrosse-eua`) | `cluster0.v9cvq1j.mongodb.net` (AWS N. Virginia, us-east-1) |
 

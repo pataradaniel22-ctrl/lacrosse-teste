@@ -25,7 +25,8 @@ services:
       # Random secret used to sign logins. Render generates it.
       - key: JWT_SECRET
         generateValue: true
+      # Only the app's own sites may call the API from a browser.
       - key: CORS_ORIGINS
-        value: "*"
+        value: "https://dailycbl.com,https://www.dailycbl.com,https://lacrosse-teste-virid.vercel.app"
       - key: VAPID_CONTACT_EMAIL
         value: mailto:pataradaniel@gmail.com
