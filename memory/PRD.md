@@ -296,3 +296,6 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
   Security: POST /api/seed and POST /api/admin/force-seed were public (wipe data / create staff with known passwords) —
   now Admin only and blocked after import; the Emergent app still has them public until republished.
 
+
+## 2026-11-02 — Novo ícone do app
+- Ícone novo (triângulo amarelo em fundo azul-escuro) em todos os tamanhos: `frontend/public/icon-*.png`, `apple-touch-icon.png`, `favicon.ico`, `favicon-32.png`; selo de notificação Android `badge-96.png`. manifest, index.html (tela de carregamento) e service worker (cache v5) atualizados. Logos dentro das telas (brazil-lacrosse-logo.png) não mudaram.
