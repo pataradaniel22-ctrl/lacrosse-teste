@@ -268,3 +268,17 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 
 ## Change Log (hospedagem fora do Emergent)
 - 2026-11-01: Removed "Combined Load × Health Risk" card from the Staff Dashboard (not used). The backend route `/api/health/staff/combined-risk` was kept.
+- 2026-11-01: **Injury & Illness Recording** module (staff menu → Injury & Illness, route /staff/injury-illness)
+  - Reference: PALA Sixes 2026 workbook (Team_Injuries 30 cols, Team_Illnesses 21 cols, Inj/Ill_Roster ID options) and
+    World Lacrosse Super Sixes Canada 2025 infographic. Not validated/certified by World Lacrosse.
+  - Backend: iir_taxonomy.py (versioned form/dictionary IIR-form-1.0 / IIR-dict-1.0, original labels kept for export),
+    iir_logic.py (dates, time loss IIR-TL-1, unique unavailable days, participation, quality), iir_service.py
+    (validation, permissions), iir_routes.py (episodes, follow-ups, audit, events, availability, athlete history,
+    restricted attachments, pending assessments), iir_analytics.py + iir_reports.py (exposure, monitoring, reports,
+    exports compat/scientific/PDF in identified/pseudonymised/anonymised modes, export log)
+  - Collections: iir_episodes, iir_followups, iir_audit, iir_events, iir_attachments, iir_triage, iir_exposure,
+    iir_monitoring, iir_export_log; pseudonym key in app_settings (_id iir_pseudonym_key, never exported)
+  - Access: Admin/Physio = clinical; Coach = availability only; Research = aggregated reports + pseudonymised/anonymised exports
+  - Frontend: pages/staff/InjuryIllness.js, components/iir/* ; athlete profile section AthleteIirHistory
+  - Tests: backend/tests/test_iir_logic.py, test_iir_analytics.py (delivery scenarios), test_iir_service.py — 38 passing
+

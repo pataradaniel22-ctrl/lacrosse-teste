@@ -245,10 +245,10 @@ function BreakdownCard({ title, rows, n, extra, footnote }) {
         {rows.length === 0 && <p className="text-xs text-muted-foreground">No data</p>}
         {rows.map((r) => (
           <div key={r.code} className="flex items-center gap-2 text-xs">
-            <span className={`flex-1 truncate ${r.code === '__not_filled__' ? 'italic text-muted-foreground' : ''}`}>{r.label}</span>
-            <div className="w-24 h-1.5 bg-white/5 rounded"><div className="h-1.5 rounded bg-rose-500/70" style={{ width: `${Math.min(100, r.pct || 0)}%` }} /></div>
-            <span className="w-20 text-right font-mono">{r.count} · {r.pct ?? '—'}%</span>
-            {extra && <span className="w-28 text-right text-[10px] text-muted-foreground">{extra(r)}</span>}
+            <span className={`flex-1 min-w-[90px] truncate ${r.code === '__not_filled__' ? 'italic text-muted-foreground' : ''}`} title={r.label}>{r.label}</span>
+            <div className="w-16 sm:w-24 h-1.5 bg-white/5 rounded shrink-0"><div className="h-1.5 rounded bg-rose-500/70" style={{ width: `${Math.min(100, r.pct || 0)}%` }} /></div>
+            <span className="w-20 text-right font-mono shrink-0">{r.count} · {r.pct ?? '—'}%</span>
+            {extra && <span className="w-20 text-right text-[10px] text-muted-foreground shrink-0">{extra(r)}</span>}
           </div>
         ))}
         <p className="text-[10px] text-muted-foreground pt-1">Denominator: {n} episode(s){footnote ? ` · ${footnote}` : ''}</p>
@@ -265,6 +265,8 @@ const BODY_ORDER = [
 ];
 
 function BodyMap({ rows, n, note }) {
+  const { tax } = useIir();
+  const labelOf = (code) => (tax?.options.body_location || []).find((o) => o.code === code)?.label || code;
   const by = Object.fromEntries(rows.map((r) => [r.code, r]));
   const max = Math.max(1, ...rows.filter((r) => r.code !== '__not_filled__').map((r) => r.count));
   return (
@@ -279,7 +281,7 @@ function BodyMap({ rows, n, note }) {
               return (
                 <div key={code} className="px-2 py-1 rounded text-[10px] text-center min-w-[70px] border border-white/5"
                   style={{ background: `rgba(225,29,72,${a})` }} title={r ? `${r.label}: ${r.count} (${r.pct}%)` : code}>
-                  {(r?.label || code.replace(/_/g, ' '))}{r ? ` · ${r.count}` : ''}
+                  {labelOf(code)}{r ? ` · ${r.count}` : ''}
                 </div>
               );
             })}

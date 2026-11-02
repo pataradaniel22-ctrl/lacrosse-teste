@@ -15,6 +15,7 @@ programador: fale sempre em **português**, de forma simples, sem jargão.
 - Histórico de testes do Emergent: `test_result.md`, `test_reports/iteration_*.json`
 - Testes de backend (pytest): `backend/tests/`
 - Ferramentas de QA: `qa/screenshots.js` (prints) e `qa/security_check.py` (segurança)
+- Módulo Injury & Illness Recording: `backend/iir_*.py`, `frontend/src/components/iir/`, testes `backend/tests/test_iir_*.py` (rodam sem servidor: `python3 -m unittest tests.test_iir_logic tests.test_iir_analytics tests.test_iir_service` dentro de `backend/`)
 
 ## Publicação
 
