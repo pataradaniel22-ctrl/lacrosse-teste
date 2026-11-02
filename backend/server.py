@@ -6520,8 +6520,10 @@ async def root():
 # Simple seed endpoint - just open in browser
 @api_router.get("/seed-demo")
 @api_router.post("/seed-demo")
-async def seed_demo():
-    """Create demo data using bulk inserts (production-safe, fast)."""
+async def seed_demo(current_user: dict = Depends(get_current_user)):
+    """Create demo data using bulk inserts (production-safe, fast). Admin only."""
+    if current_user['user_type'] != 'staff' or current_user['user'].get('role') != 'Admin':
+        raise HTTPException(status_code=403, detail="Admin access required")
     if await db.app_settings.find_one({"_id": "demo_seed_disabled"}):
         raise HTTPException(status_code=403, detail="Demo data is disabled on this installation")
     import random
@@ -7190,6 +7192,10 @@ register_emergent_import_routes(api_router, db, get_current_user)
 # Injury & Illness Recording (clinical surveillance module)
 from iir_routes import register_iir_routes  # noqa: E402
 register_iir_routes(api_router, db, get_current_user)
+
+# Sign in with Google (only for existing, approved accounts)
+from google_auth import register_google_auth_routes  # noqa: E402
+register_google_auth_routes(api_router, db, create_token)
 
 # Include the router
 app.include_router(api_router)

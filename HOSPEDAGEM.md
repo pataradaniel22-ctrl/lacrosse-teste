@@ -24,7 +24,8 @@ sozinhos em 3–5 minutos.
 - `MONGO_URL`: endereço de conexão do MongoDB Atlas (com a senha do usuário `pataradaniel22_db_user`)
 - `ADMIN_INITIAL_PASSWORD`: senha inicial do admin `pataradaniel@gmail.com`
 - `JWT_SECRET`: gerado automaticamente pelo Render
-- `DB_NAME`, `CORS_ORIGINS`, `VAPID_CONTACT_EMAIL`: definidos em `render.yaml`
+- `DB_NAME`, `CORS_ORIGINS`, `VAPID_CONTACT_EMAIL`, `GOOGLE_CLIENT_ID`: definidos em `render.yaml`
+  (`GOOGLE_CLIENT_ID` é público: ID do cliente OAuth do projeto Google Cloud "AMS Brasil Lacrosse"; vazio = botão do Google escondido)
 
 **Vercel → lacrosse-teste → Settings → Environment Variables**
 - `REACT_APP_BACKEND_URL` = `https://lacrosse-teste-api.onrender.com`

@@ -163,7 +163,7 @@ export default function AdminPanel() {
   const seedDemoData = async () => {
     setDemoLoading(true);
     try {
-      const response = await axios.get(`${API}/seed-demo`);
+      const response = await axios.get(`${API}/seed-demo`, getAuthHeaders());
       if (response.data.success) {
         toast.success(`Demo data created! ${response.data.data_created}`);
         fetchData();

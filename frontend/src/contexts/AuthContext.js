@@ -52,6 +52,18 @@ export const AuthProvider = ({ children }) => {
     return { user: userData, userType: user_type };
   };
 
+  const loginWithGoogle = async (credential) => {
+    const response = await axios.post(`${API}/auth/google`, { credential });
+    const { token: newToken, user: userData, user_type } = response.data;
+
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(userData);
+    setUserType(user_type);
+
+    return { user: userData, userType: user_type };
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setToken(null);
@@ -69,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    loginWithGoogle,
     logout,
     getAuthHeaders,
     isAuthenticated: !!token

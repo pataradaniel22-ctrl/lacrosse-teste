@@ -7,12 +7,13 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
 import { UserPlus } from 'lucide-react';
+import GoogleSignInButton from '../components/auth/GoogleSignInButton';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -25,6 +26,19 @@ export default function Login() {
       navigate(userType === 'athlete' ? '/athlete' : '/staff');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogle = async (credential) => {
+    setIsLoading(true);
+    try {
+      const { userType } = await loginWithGoogle(credential);
+      toast.success('Welcome back!');
+      navigate(userType === 'athlete' ? '/athlete' : '/staff');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Google sign-in failed');
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +110,10 @@ export default function Login() {
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
+
+            <div className="mt-4">
+              <GoogleSignInButton onCredential={handleGoogle} disabled={isLoading} />
+            </div>
             
             {/* Register Links */}
             <div className="mt-6 pt-6 border-t border-white/10 text-center">

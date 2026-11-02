@@ -301,3 +301,7 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Ícone novo (triângulo amarelo em fundo azul-escuro) em todos os tamanhos: `frontend/public/icon-*.png`, `apple-touch-icon.png`, `favicon.ico`, `favicon-32.png`; selo de notificação Android `badge-96.png`. manifest, index.html (tela de carregamento) e service worker (cache v5) atualizados. Logos dentro das telas (brazil-lacrosse-logo.png) não mudaram.
 - 2026-11-02: ícone do Android (maskable) com o logo 72% do tamanho: `icon-maskable-192/512.png`; iPhone e computador continuam com o ícone cheio. Cache do service worker v6.
 - 2026-11-02: importação do Emergent confirmada pelo usuário (25 atletas e 1430 check-ins presentes no app).
+
+## 2026-11-02 — Segurança: seed-demo fechado + Entrar com Google
+- `/api/seed-demo` agora exige admin logado (botão do painel admin envia o token).
+- Entrar com Google (`backend/google_auth.py`, `frontend/src/components/auth/GoogleSignInButton.jsx`): só contas já cadastradas, aprovadas e ativas (mesmo e-mail, sem diferenciar maiúsculas); token do Google verificado no servidor (assinatura, emissor, audiência, validade, e-mail verificado); primeira entrada grava `google_sub` e depois só aquela conta Google entra. Login com senha continua. Botão aparece só com `GOOGLE_CLIENT_ID` configurado. Testes: `python3 -m unittest tests.test_google_auth` (14).
