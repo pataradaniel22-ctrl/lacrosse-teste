@@ -34,6 +34,7 @@ import Rankings from "./pages/staff/Rankings";
 import StaffNotifications from "./pages/staff/StaffNotifications";
 import StaffMessages from "./pages/staff/StaffMessages";
 import InjuryIllness from "./pages/staff/InjuryIllness";
+import DemoBanner from "./components/demo/DemoBanner";
 import TheFittest from "./pages/athlete/TheFittest";
 import TheFittestAdmin from "./pages/staff/TheFittestAdmin";
 import ResearchData from "./pages/staff/ResearchData";
@@ -123,6 +124,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <DemoBanner />
         <AppRoutes />
         <UpdatePrompt />
         <Toaster position="bottom-center" richColors />

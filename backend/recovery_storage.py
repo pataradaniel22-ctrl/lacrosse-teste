@@ -25,7 +25,7 @@ THUMBNAILABLE = {"jpg", "jpeg", "png"}
 APP_NAME = "brazil-lacrosse-recovery"
 BUCKET_NAME = "uploads"
 
-_fs = None
+_fs = {}
 _fs_lock = threading.Lock()
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
@@ -39,20 +39,26 @@ MAX_FILE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 def init_storage():
-    """Open (once) the GridFS bucket. Returns the bucket."""
-    global _fs
-    if _fs is not None:
-        return _fs
+    """Open (once per database) the GridFS bucket. Demo-mode requests use the
+    sandbox database so demo uploads never mix with real files."""
+    try:
+        from db_context import sandbox_mode
+        key = "sandbox" if sandbox_mode.get() else "real"
+    except ImportError:
+        key = "real"
+    if key in _fs:
+        return _fs[key]
     with _fs_lock:
-        if _fs is None:
+        if key not in _fs:
             mongo_url = os.environ.get("MONGO_URL")
             db_name = os.environ.get("DB_NAME")
             if not mongo_url or not db_name:
                 raise RuntimeError("MONGO_URL / DB_NAME not configured")
             client = MongoClient(mongo_url)
-            _fs = gridfs.GridFSBucket(client[db_name], bucket_name=BUCKET_NAME)
-            logger.info("Object storage (GridFS) initialized")
-    return _fs
+            name = db_name + "_sandbox" if key == "sandbox" else db_name
+            _fs[key] = gridfs.GridFSBucket(client[name], bucket_name=BUCKET_NAME)
+            logger.info("Object storage (GridFS) initialized (%s)", key)
+    return _fs[key]
 
 
 def _put_object_sync(path: str, data: bytes, content_type: str) -> dict:

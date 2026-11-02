@@ -26,6 +26,8 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
+import DemoModePanel from '../../components/demo/DemoModePanel';
+import { FlaskConical } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -445,6 +447,10 @@ export default function AdminPanel() {
               <UserCog className="w-4 h-4" />
               Staff ({allStaff.length})
             </TabsTrigger>
+            <TabsTrigger value="demo" className="flex items-center gap-2" data-testid="tab-demo">
+              <FlaskConical className="w-4 h-4" />
+              Demo mode
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-4 space-y-3">
@@ -633,6 +639,10 @@ export default function AdminPanel() {
           </TabsContent>
 
           {/* ===== All Staff ===== */}
+          <TabsContent value="demo" className="mt-4">
+            <DemoModePanel getAuthHeaders={getAuthHeaders} />
+          </TabsContent>
+
           <TabsContent value="staff" className="mt-4 space-y-3">
             {allStaff.length === 0 ? (
               <Card className="glass-light border-white/5">

@@ -56,7 +56,10 @@ load_dotenv(ROOT_DIR / '.env')
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# `db` resolves per request to the real database or, for Demo-mode tokens, to an
+# isolated sandbox database (see db_context.py). Demo data never reaches real data.
+from db_context import SandboxAwareDB, SandboxMiddleware  # noqa: E402
+db = SandboxAwareDB(client[os.environ['DB_NAME']], client[os.environ['DB_NAME'] + '_sandbox'])
 
 # JWT settings
 JWT_SECRET = os.environ.get('JWT_SECRET', 'brazil-lacrosse-secret-2024')
@@ -492,6 +495,20 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+
+SANDBOX_TOKEN_HOURS = 12
+
+
+def create_sandbox_token(user_id: str, user_type: str) -> str:
+    """Demo-mode token: every request made with it uses the sandbox database."""
+    payload = {
+        "user_id": user_id,
+        "user_type": user_type,
+        "sandbox": True,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=SANDBOX_TOKEN_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
 
 def create_token(user_id: str, user_type: str) -> str:
     payload = {
@@ -7149,12 +7166,17 @@ register_the_fittest_routes(api_router, db, get_current_user)
 from research_export_routes import register_research_routes  # noqa: E402
 register_research_routes(api_router, db, get_current_user)
 
+# Demo mode (isolated test athlete)
+from sandbox_routes import register_sandbox_routes  # noqa: E402
+register_sandbox_routes(api_router, db, get_current_user, create_sandbox_token)
+
 # Injury & Illness Recording (clinical surveillance module)
 from iir_routes import register_iir_routes  # noqa: E402
 register_iir_routes(api_router, db, get_current_user)
 
 # Include the router
 app.include_router(api_router)
+app.add_middleware(SandboxMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))
 
 app.add_middleware(
     CORSMiddleware,
