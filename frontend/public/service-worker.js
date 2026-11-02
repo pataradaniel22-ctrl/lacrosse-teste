@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ams-brasil-lacrosse-v5';
+const CACHE_NAME = 'ams-brasil-lacrosse-v6';
 const urlsToCache = [
   '/brazil-lacrosse-logo.png',
   '/icon-192.png',
