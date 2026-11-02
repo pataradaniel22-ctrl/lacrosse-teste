@@ -305,3 +305,4 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 ## 2026-11-02 — Segurança: seed-demo fechado + Entrar com Google
 - `/api/seed-demo` agora exige admin logado (botão do painel admin envia o token).
 - Entrar com Google (`backend/google_auth.py`, `frontend/src/components/auth/GoogleSignInButton.jsx`): só contas já cadastradas, aprovadas e ativas (mesmo e-mail, sem diferenciar maiúsculas); token do Google verificado no servidor (assinatura, emissor, audiência, validade, e-mail verificado); primeira entrada grava `google_sub` e depois só aquela conta Google entra. Login com senha continua. Botão aparece só com `GOOGLE_CLIENT_ID` configurado. Testes: `python3 -m unittest tests.test_google_auth` (14).
+- 2026-11-02: páginas públicas /privacy (Política de Privacidade, LGPD) e /terms (Termos de Uso), PT/EN, em `frontend/src/pages/Legal.js`; links no rodapé do login. Exigidas pelo Google para publicar o login.

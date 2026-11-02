@@ -142,6 +142,10 @@ export default function Login() {
         <p className="text-center text-xs text-muted-foreground mt-6">
           © 2024 Brasil Lacrosse National Teams
         </p>
+        <p className="text-center text-xs text-muted-foreground mt-2 space-x-3">
+          <Link to="/privacy" className="underline hover:text-foreground" data-testid="login-privacy-link">Privacy Policy</Link>
+          <Link to="/terms" className="underline hover:text-foreground" data-testid="login-terms-link">Terms of Use</Link>
+        </p>
       </div>
     </div>
   );

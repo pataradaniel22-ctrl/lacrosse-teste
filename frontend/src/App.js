@@ -3,6 +3,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import MobileBottomNav from "./components/MobileBottomNav";
 import Login from "./pages/Login";
+import { PrivacyPolicy, TermsOfUse } from "./pages/Legal";
 import Register from "./pages/Register";
 import StaffRegister from "./pages/StaffRegister";
 import ProfileSettings from "./pages/ProfileSettings";
@@ -70,6 +71,8 @@ function AppRoutes() {
   
   return (
     <Routes>
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfUse />} />
       <Route path="/login" element={user ? <Navigate to={userType === 'athlete' ? '/athlete' : '/staff'} replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to={userType === 'athlete' ? '/athlete' : '/staff'} replace /> : <Register />} />
       <Route path="/register/athlete" element={user ? <Navigate to={userType === 'athlete' ? '/athlete' : '/staff'} replace /> : <Register />} />
