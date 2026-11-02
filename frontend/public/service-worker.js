@@ -122,9 +122,9 @@ self.addEventListener('push', (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch (e) {
-    data = { title: 'Athlete Pulse', body: event.data ? event.data.text() : 'Nova notificação' };
+    data = { title: 'AMS Brasil Lacrosse', body: event.data ? event.data.text() : 'Nova notificação' };
   }
-  const title = data.title || 'Athlete Pulse';
+  const title = data.title || 'AMS Brasil Lacrosse';
   const options = {
     body: data.body || 'Nova notificação',
     icon: '/brazil-lacrosse-logo.png',

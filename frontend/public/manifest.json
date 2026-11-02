@@ -1,6 +1,6 @@
 {
-  "short_name": "Athlete Pulse",
-  "name": "Brasil Lacrosse - Athlete Monitoring",
+  "short_name": "AMS Brasil Lacrosse",
+  "name": "AMS Brasil Lacrosse - Athlete Monitoring System",
   "description": "Sistema de monitoramento de atletas para Brasil Lacrosse",
   "icons": [
     {
@@ -37,11 +37,18 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "orientation": "portrait-primary",
   "theme_color": "#0a0a0a",
   "background_color": "#0a0a0a",
-  "categories": ["sports", "health", "fitness"],
+  "categories": [
+    "sports",
+    "health",
+    "fitness"
+  ],
   "lang": "pt-BR",
   "dir": "ltr",
   "prefer_related_applications": false,
@@ -51,14 +58,24 @@
       "short_name": "Check-in",
       "description": "Registrar check-in matinal",
       "url": "/athlete/morning-checkin",
-      "icons": [{ "src": "brazil-lacrosse-logo.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "brazil-lacrosse-logo.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Registrar Treino",
       "short_name": "Treino",
       "description": "Registrar sessão de treino",
       "url": "/athlete/post-training",
-      "icons": [{ "src": "brazil-lacrosse-logo.png", "sizes": "96x96" }]
+      "icons": [
+        {
+          "src": "brazil-lacrosse-logo.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }
