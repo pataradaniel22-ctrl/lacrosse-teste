@@ -1346,9 +1346,13 @@ async def _get_staff_or_404(staff_id: str) -> dict:
     return target
 
 
+DEMO_SEED_ADMIN_EMAILS = {"admin@brazillacrosse.com"}
+
+
 def _guard_destructive_staff_action(target: dict, current_user: dict):
     """Protect Admin accounts and prevent acting on your own account."""
-    if target.get('role') == 'Admin':
+    # Fictitious admin created by the old demo seed (password in the code) is not protected
+    if target.get('role') == 'Admin' and (target.get('email') or '').lower() not in DEMO_SEED_ADMIN_EMAILS:
         raise HTTPException(status_code=403, detail="Administrator accounts are protected and cannot be modified.")
     if target.get('id') == current_user['user']['id']:
         raise HTTPException(status_code=403, detail="You cannot modify your own account.")
@@ -7196,6 +7200,10 @@ register_iir_routes(api_router, db, get_current_user)
 # Sign in with Google (only for existing, approved accounts)
 from google_auth import register_google_auth_routes  # noqa: E402
 register_google_auth_routes(api_router, db, create_token)
+
+# Admin: remove an athlete and all their records (test accounts)
+from athlete_purge import register_athlete_purge_routes  # noqa: E402
+register_athlete_purge_routes(api_router, db, get_current_user)
 
 # Include the router
 app.include_router(api_router)
