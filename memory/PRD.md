@@ -281,4 +281,10 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
   - Access: Admin/Physio = clinical; Coach = availability only; Research = aggregated reports + pseudonymised/anonymised exports
   - Frontend: pages/staff/InjuryIllness.js, components/iir/* ; athlete profile section AthleteIirHistory
   - Tests: backend/tests/test_iir_logic.py, test_iir_analytics.py (delivery scenarios), test_iir_service.py — 38 passing
+- 2026-11-01: **Demo mode** (Admin → Demo mode). Isolated test athlete for testing/demonstrations. Requests with a sandbox
+  token (claim "sandbox", issued only by /api/admin/sandbox/enter, 12 h) use database <DB_NAME>_sandbox through the
+  SandboxAwareDB proxy (db_context.py) — demo data never reaches real statistics, reports or exports. Config collections
+  (surveys, recovery catalogue, The Fittest settings/challenges, app settings except the pseudonym key) are copied on setup.
+  Frontend: components/demo/* (DemoModePanel, DemoBanner with "Exit demo" restoring the admin token). Tests:
+  backend/tests/test_sandbox_isolation.py
 

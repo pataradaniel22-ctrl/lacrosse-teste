@@ -38,3 +38,6 @@ sozinhos em 3–5 minutos.
   não é mais usado.
 - O login leva ~1,7 s por causa da verificação de senha (bcrypt) no servidor gratuito.
 - As chaves de notificação push são geradas automaticamente e salvas no banco (coleção `app_settings`).
+- Modo Demonstração: os dados do atleta de teste ficam no banco `lacrosse_teste_sandbox` (mesmo cluster). Para apagar tudo,
+  use Admin → Demo mode → Clear demo data.
+

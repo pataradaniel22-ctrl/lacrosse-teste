@@ -17,6 +17,13 @@ programador: fale sempre em **português**, de forma simples, sem jargão.
 - Ferramentas de QA: `qa/screenshots.js` (prints) e `qa/security_check.py` (segurança)
 - Módulo Injury & Illness Recording: `backend/iir_*.py`, `frontend/src/components/iir/`, testes `backend/tests/test_iir_*.py` (rodam sem servidor: `python3 -m unittest tests.test_iir_logic tests.test_iir_analytics tests.test_iir_service` dentro de `backend/`)
 
+## Modo Demonstração
+
+Admin → Demo mode cria um atleta de teste num banco separado (`<DB_NAME>_sandbox`), escolhido por requisição pelo
+proxy `db` (`backend/db_context.py`). Toda funcionalidade nova que acesse o banco pelo objeto `db` já respeita o modo
+demo automaticamente; **nunca** crie outra conexão direta ao banco (MongoClient/AsyncIOMotorClient) em código de rotas
+sem passar por esse proxy (exceção já tratada: `recovery_storage.py`). Use o modo demo para testar telas de atleta.
+
 ## Publicação
 
 Push na branch `main` = deploy automático (Vercel para o site, Render para o
