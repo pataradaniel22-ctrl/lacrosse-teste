@@ -179,6 +179,8 @@ def register_emergent_import_routes(api_router, db, get_current_user):
         task.add_done_callback(_TASKS.discard)
         return {"message": "Import started", "database": name}
 
+    register_backup_file_routes(api_router, db, get_current_user, _require_admin, _set_status, _status)
+
     async def _run(client, src, include_files):
         errors = []
         done = []
@@ -241,3 +243,153 @@ def register_emergent_import_routes(api_router, db, get_current_user):
             await _set_status(state="failed", errors=errors, finished_at=_now())
         finally:
             client.close()
+
+
+# ---------------------------------------------------------------------------
+# Import from the backup ZIP produced by GET /api/admin/full-backup on Emergent
+#   manifest.json · collections/<name>.json (bson.json_util relaxed) ·
+#   files/<storage_path> · files_index.json
+# ---------------------------------------------------------------------------
+import json  # noqa: E402
+import tempfile  # noqa: E402
+import uuid as _uuid  # noqa: E402
+import zipfile  # noqa: E402
+
+from fastapi import File, UploadFile  # noqa: E402
+
+UPLOAD_DIR = os.path.join(tempfile.gettempdir(), "emergent_backups")
+MAX_UPLOAD = 1024 * 1024 * 1024  # 1 GB
+
+
+def read_backup(path):
+    """Validate a backup ZIP and return (manifest, {collection: count_in_file}, files_count)."""
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        if "manifest.json" not in names:
+            raise ValueError("manifest.json not found — is this the full backup from the Emergent app?")
+        manifest = json.loads(z.read("manifest.json"))
+        colls = {}
+        for n in names:
+            if n.startswith("collections/") and n.endswith(".json"):
+                colls[n[len("collections/"):-len(".json")]] = n
+        files = [n for n in names if n.startswith("files/") and not n.endswith("/")]
+        return manifest, colls, len(files)
+
+
+def register_backup_file_routes(api_router, db, get_current_user, require_admin, set_status, get_status):
+
+    @api_router.post("/admin/emergent-import/upload")
+    async def backup_upload(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+        require_admin(current_user)
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        upload_id = str(_uuid.uuid4())
+        dest = os.path.join(UPLOAD_DIR, f"{upload_id}.zip")
+        size = 0
+        with open(dest, "wb") as out:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                size += len(chunk)
+                if size > MAX_UPLOAD:
+                    out.close()
+                    os.remove(dest)
+                    raise HTTPException(status_code=400, detail="Backup too large (max 1 GB)")
+                out.write(chunk)
+        try:
+            manifest, colls, nfiles = read_backup(dest)
+        except (zipfile.BadZipFile, ValueError, json.JSONDecodeError) as e:
+            os.remove(dest)
+            raise HTTPException(status_code=400, detail=f"Invalid backup file: {e}")
+        rows = []
+        for name in sorted(colls):
+            rows.append({"collection": name, "emergent": (manifest.get("collections") or {}).get(name),
+                         "here": await db.real[name].count_documents({}),
+                         "action": "keep local" if name in KEEP_LOCAL else "replace"})
+        missing = sorted(set((manifest.get("collections") or {})) - set(colls))
+        return {"upload_id": upload_id, "size": size, "database": manifest.get("db_name"),
+                "generated_at": manifest.get("generated_at"), "collections": rows, "files": nfiles,
+                "missing_in_zip": missing,
+                "local_only_collections_kept": sorted(set(await db.real.list_collection_names()) - set(colls))}
+
+    @api_router.post("/admin/emergent-import/run-file")
+    async def backup_run(payload: dict, current_user: dict = Depends(get_current_user)):
+        admin = require_admin(current_user)
+        if (payload.get("confirm") or "").strip().upper() != CONFIRM_WORD:
+            raise HTTPException(status_code=400, detail=f"Type {CONFIRM_WORD} to confirm")
+        if (await get_status()).get("state") == "running":
+            raise HTTPException(status_code=409, detail="An import is already running")
+        upload_id = str(payload.get("upload_id") or "")
+        if not upload_id or "/" in upload_id or ".." in upload_id:
+            raise HTTPException(status_code=400, detail="Invalid upload")
+        path = os.path.join(UPLOAD_DIR, f"{upload_id}.zip")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail="Backup file not found — upload it again")
+        manifest, colls, _ = read_backup(path)
+        await set_status(state="running", started_at=_now(), started_by=admin.get("name"),
+                         database=manifest.get("db_name"), source="backup file", phase="collections",
+                         collections_done=[], errors=[], files_total=0, files_done=0, files_failed=0,
+                         finished_at=None)
+        task = asyncio.create_task(_run_file(path, manifest, colls, bool(payload.get("include_files", True))))
+        _TASKS.add(task)
+        task.add_done_callback(_TASKS.discard)
+        return {"message": "Import started"}
+
+    async def _run_file(path, manifest, colls, include_files):
+        from bson import json_util
+        errors, done = [], []
+        expected_counts = manifest.get("collections") or {}
+        try:
+            with zipfile.ZipFile(path) as z:
+                for name in sorted(colls):
+                    if name.startswith("system.") or name in KEEP_LOCAL:
+                        continue
+                    try:
+                        docs = json_util.loads(z.read(colls[name]).decode("utf-8"))
+                        if not isinstance(docs, list):
+                            raise ValueError("collection file is not a list")
+                        await db.real[name].delete_many({})
+                        for i in range(0, len(docs), BATCH):
+                            await db.real[name].insert_many(docs[i:i + BATCH], ordered=False)
+                        exp = expected_counts.get(name, len(docs))
+                        here = await db.real[name].count_documents({})
+                        done.append({"collection": name, "copied": here, "emergent": exp, "ok": here == exp})
+                    except Exception as e:
+                        errors.append(f"{name}: {type(e).__name__}: {str(e)[:150]}")
+                    await set_status(collections_done=done, errors=errors)
+
+                files = [n for n in z.namelist() if n.startswith("files/") and not n.endswith("/")]
+                if include_files and files:
+                    index = {}
+                    if "files_index.json" in z.namelist():
+                        for it in json.loads(z.read("files_index.json")):
+                            index[it.get("path")] = it.get("content_type")
+                    await set_status(phase="files", files_total=len(files))
+                    from recovery_storage import put_object
+                    ok = failed = 0
+                    for n in files:
+                        p = n[len("files/"):]
+                        try:
+                            await put_object(p, z.read(n), index.get(p) or "application/octet-stream")
+                            ok += 1
+                        except Exception as e:
+                            failed += 1
+                            if failed <= 20:
+                                errors.append(f"file {p}: {type(e).__name__}")
+                        if (ok + failed) % 20 == 0:
+                            await set_status(files_done=ok, files_failed=failed, errors=errors)
+                    await set_status(files_done=ok, files_failed=failed, errors=errors)
+            await db.real.app_settings.update_one({"_id": "demo_seed_disabled"}, {"$set": {
+                "value": True, "reason": "Emergent data imported (backup file)", "at": _now()}}, upsert=True)
+            await set_status(state="finished", phase="done", finished_at=_now(),
+                             all_counts_match=all(c["ok"] for c in done) and not any(
+                                 e for e in errors if not e.startswith("file ")))
+        except Exception as e:
+            logger.exception("Backup import failed")
+            errors.append(f"fatal: {type(e).__name__}: {str(e)[:200]}")
+            await set_status(state="failed", errors=errors, finished_at=_now())
+        finally:
+            try:
+                os.remove(path)  # the backup contains personal data: do not keep it on the server
+            except OSError:
+                pass

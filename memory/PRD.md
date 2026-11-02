@@ -287,4 +287,12 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
   (surveys, recovery catalogue, The Fittest settings/challenges, app settings except the pseudonym key) are copied on setup.
   Frontend: components/demo/* (DemoModePanel, DemoBanner with "Exit demo" restoring the admin token). Tests:
   backend/tests/test_sandbox_isolation.py
+- 2026-11-02: **Import from Emergent** (Admin → Import from Emergent, backend/emergent_import.py). Direct DB connection
+  is blocked by Emergent (shared Atlas only accepts Emergent servers), so the supported path is the backup ZIP produced by
+  a new admin route GET /api/admin/full-backup on the Emergent app (manifest.json, collections/<name>.json in
+  bson.json_util relaxed JSON, files/<storage_path>, files_index.json). Upload → check → confirm (type IMPORTAR) →
+  replaces local collections with the same names (app_settings kept), keeps ids and password hashes, copies files to
+  GridFS, deletes the uploaded ZIP, then disables demo seeding (app_settings demo_seed_disabled).
+  Security: POST /api/seed and POST /api/admin/force-seed were public (wipe data / create staff with known passwords) —
+  now Admin only and blocked after import; the Emergent app still has them public until republished.
 

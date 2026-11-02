@@ -16,6 +16,7 @@ export default function EmergentImportPanel({ getAuthHeaders }) {
   const [busy, setBusy] = useState('');
   const [confirm, setConfirm] = useState('');
   const [includeFiles, setIncludeFiles] = useState(true);
+  const [uploadPct, setUploadPct] = useState(null);
   const timer = useRef(null);
 
   const loadStatus = useCallback(async () => {
@@ -49,10 +50,32 @@ export default function EmergentImportPanel({ getAuthHeaders }) {
     } finally { setBusy(''); }
   };
 
+  const uploadBackup = async (file) => {
+    if (!file) return;
+    setBusy('upload');
+    setUploadPct(0);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await axios.post(`${API}/admin/emergent-import/upload`, fd, {
+        headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (e) => e.total && setUploadPct(Math.round((e.loaded / e.total) * 100)),
+      });
+      setPreview({ ...r.data, fromFile: true, staff: [], athletes: r.data.collections.find((c) => c.collection === 'athletes')?.emergent, files_key_configured: true });
+      toast.success('Backup file checked');
+    } catch (err) {
+      toast.error(errMsg(err, 'Could not read the backup file'));
+    } finally { setBusy(''); setUploadPct(null); }
+  };
+
   const runImport = async () => {
     setBusy('run');
     try {
-      await axios.post(`${API}/admin/emergent-import/run`, { confirm, include_files: includeFiles }, getAuthHeaders());
+      if (preview?.fromFile) {
+        await axios.post(`${API}/admin/emergent-import/run-file`, { upload_id: preview.upload_id, confirm, include_files: includeFiles }, getAuthHeaders());
+      } else {
+        await axios.post(`${API}/admin/emergent-import/run`, { confirm, include_files: includeFiles }, getAuthHeaders());
+      }
       toast.success('Import started');
       setConfirm('');
       poll();
@@ -76,14 +99,26 @@ export default function EmergentImportPanel({ getAuthHeaders }) {
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
+          <div className="rounded-md border border-sky-500/30 bg-sky-500/5 p-3 space-y-2">
+            <p className="text-xs"><b>Recommended:</b> upload the <b>full backup ZIP</b> downloaded from the Emergent app (Admin → Download full backup). The file is checked first; nothing is imported until you confirm, and it is deleted from the server after the import.</p>
+            <label className="inline-flex items-center gap-2 text-sm cursor-pointer rounded-md border border-white/15 px-3 py-2 hover:bg-white/5">
+              <input type="file" accept=".zip,application/zip" className="hidden" onChange={(e) => uploadBackup(e.target.files?.[0])} disabled={!!busy || running} data-testid="emergent-upload-input" />
+              {busy === 'upload' ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading {uploadPct ?? 0}%</> : <>1 · Choose backup ZIP</>}
+            </label>
+          </div>
+          <p className="text-[11px] text-muted-foreground">Alternative (only works if Emergent allows outside connections — currently it does not):</p>
           <Button onClick={runPreview} disabled={!!busy || running} variant="outline" data-testid="emergent-preview-btn">
             {busy === 'preview' ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 mr-1" />1 · Simulate (counts only, changes nothing)</>}
           </Button>
 
           {preview && (
             <div className="space-y-2">
-              <p className="text-xs">Emergent database: <b>{preview.database}</b> · {preview.athletes} athlete(s) · staff: {preview.staff.map((s) => `${s.name} (${s.role})`).join(', ')}</p>
-              <p className="text-xs">Files (photos/PDFs) referenced: <b>{preview.files}</b> · storage key {preview.files_key_configured ? <span className="text-emerald-400">configured</span> : <span className="text-amber-300">NOT configured — files will not be copied</span>}</p>
+              <p className="text-xs">Emergent database: <b>{preview.database}</b> · {preview.athletes ?? '?'} athlete(s){preview.staff?.length ? ` · staff: ${preview.staff.map((s) => `${s.name} (${s.role})`).join(', ')}` : ''}{preview.generated_at ? ` · backup of ${String(preview.generated_at).slice(0, 16).replace('T', ' ')}` : ''}</p>
+              {preview.fromFile ? (
+                <p className="text-xs">Files (photos/PDFs) in the backup: <b>{preview.files}</b>{preview.missing_in_zip?.length ? <span className="text-amber-300"> · missing in ZIP: {preview.missing_in_zip.join(', ')}</span> : ''}</p>
+              ) : (
+                <p className="text-xs">Files (photos/PDFs) referenced: <b>{preview.files}</b> · storage key {preview.files_key_configured ? <span className="text-emerald-400">configured</span> : <span className="text-amber-300">NOT configured — files will not be copied</span>}</p>
+              )}
               <div className="max-h-72 overflow-y-auto rounded border border-white/10">
                 <table className="w-full text-xs" data-testid="emergent-preview-table">
                   <thead className="bg-white/5 text-muted-foreground"><tr><th className="text-left p-1.5">Collection</th><th className="text-right p-1.5">In Emergent</th><th className="text-right p-1.5">Here now</th><th className="text-left p-1.5">Action</th></tr></thead>
