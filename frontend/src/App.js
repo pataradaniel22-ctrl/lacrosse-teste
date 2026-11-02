@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import MobileBottomNav from "./components/MobileBottomNav";
@@ -36,8 +36,8 @@ import StaffNotifications from "./pages/staff/StaffNotifications";
 import StaffMessages from "./pages/staff/StaffMessages";
 import InjuryIllness from "./pages/staff/InjuryIllness";
 import DemoBanner from "./components/demo/DemoBanner";
-import { GroupFilterNotice } from "./components/groups/GroupFilterBar";
-import { installGroupFilterInterceptor } from "./lib/athleteGroups";
+import { StaffGroupStrip } from "./components/groups/GroupFilterBar";
+import { installGroupFilterInterceptor, useGroupFilter } from "./lib/athleteGroups";
 
 installGroupFilterInterceptor();
 import TheFittest from "./pages/athlete/TheFittest";
@@ -127,13 +127,26 @@ function AppRoutes() {
   );
 }
 
+// Staff pages: group bar on top, and the page reloads when the group changes
+function StaffGroupScope() {
+  const { user, userType, getAuthHeaders } = useAuth();
+  const [group] = useGroupFilter();
+  const { pathname } = useLocation();
+  const isStaffPage = userType === 'staff' && pathname.startsWith('/staff');
+  return (
+    <>
+      {isStaffPage && <StaffGroupStrip getAuthHeaders={getAuthHeaders} isAdmin={user?.role === 'Admin'} />}
+      <AppRoutes key={isStaffPage ? `g-${group || 'all'}` : 'routes'} />
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <DemoBanner />
-        <AppRoutes />
-        <GroupFilterNotice />
+        <StaffGroupScope />
         <UpdatePrompt />
         <Toaster position="bottom-center" richColors />
       </AuthProvider>

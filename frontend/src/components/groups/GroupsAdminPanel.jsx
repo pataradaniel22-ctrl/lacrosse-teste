@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Tags, Plus, Trash2, Save, Search, Loader2, Check } from 'lucide-react';
-import { GROUP_COLORS, colorOf, fetchGroups, setGroupsCache } from '../../lib/athleteGroups';
+import { GROUP_COLORS, colorOf, fetchGroups, setGroupsCache, patchAthleteGroupMap, refreshAthleteGroupMap } from '../../lib/athleteGroups';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const errMsg = (e, fb) => e?.response?.data?.detail || fb;
@@ -52,6 +52,7 @@ export default function GroupsAdminPanel({ getAuthHeaders: getAuthHeadersProp })
       setGroups(r.data.groups);
       setDraft(r.data.groups.map((x) => ({ ...x })));
       setGroupsCache(r.data.groups);
+      refreshAthleteGroupMap();
       if (r.data.removed?.length) {
         setAthletes((list) => list.map((a) => ({ ...a, groups: (a.groups || []).filter((g) => !r.data.removed.includes(g)) })));
       }
@@ -67,6 +68,7 @@ export default function GroupsAdminPanel({ getAuthHeaders: getAuthHeadersProp })
     setAthletes((list) => list.map((a) => (a.id === athlete.id ? { ...a, groups: next } : a)));
     try {
       await axios.put(`${API}/staff/athletes/${athlete.id}/groups`, { groups: next }, getAuthHeaders());
+      patchAthleteGroupMap(athlete.id, next);
     } catch (e) {
       setAthletes((list) => list.map((a) => (a.id === athlete.id ? { ...a, groups: prev } : a)));
       toast.error(errMsg(e, 'Could not update'));

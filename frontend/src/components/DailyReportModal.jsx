@@ -27,6 +27,7 @@ export default function DailyReportModal({ open, onOpenChange, teamFilter, setTe
 
   const teamLabel = teamFilter === 'Brazil Lacrosse Men' ? 'Men'
     : teamFilter === 'Brazil Lacrosse Women' ? 'Women' : 'All athletes';
+  const withGroup = (d) => (d?.group ? `${teamLabel} · Group: ${d.group.name}` : teamLabel);
 
   const fetchReport = useCallback(async () => {
     setLoading(true);
@@ -51,9 +52,9 @@ export default function DailyReportModal({ open, onOpenChange, teamFilter, setTe
     if (!data) { toast.error(lang === 'pt' ? 'Dados ainda não carregados.' : 'Data not loaded yet.'); return; }
     setGenerating(true);
     try {
-      if (format === 'whatsapp' || format === 'both') setWaText(buildWhatsAppSummary({ data, lang, teamLabel }));
+      if (format === 'whatsapp' || format === 'both') setWaText(buildWhatsAppSummary({ data, lang, teamLabel: withGroup(data) }));
       if (format === 'pdf' || format === 'both') {
-        const doc = generateDailyReportPdf({ data, teamLabel });
+        const doc = generateDailyReportPdf({ data, teamLabel: withGroup(data) });
         doc.save(`daily-report-${data.date}.pdf`);
         toast.success(lang === 'pt' ? 'PDF gerado!' : 'PDF generated!');
       }
@@ -66,7 +67,7 @@ export default function DailyReportModal({ open, onOpenChange, teamFilter, setTe
   };
 
   const copyWa = async () => {
-    const txt = waText || buildWhatsAppSummary({ data, lang, teamLabel });
+    const txt = waText || buildWhatsAppSummary({ data, lang, teamLabel: withGroup(data) });
     if (!waText) setWaText(txt);
     try { await navigator.clipboard.writeText(txt); toast.success(lang === 'pt' ? 'Texto copiado!' : 'Copied!'); }
     catch { toast.error(lang === 'pt' ? 'Não foi possível copiar' : 'Could not copy'); }

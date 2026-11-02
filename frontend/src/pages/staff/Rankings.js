@@ -1,3 +1,4 @@
+import GroupBadges from '../../components/groups/GroupBadges';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,6 +47,7 @@ const RankCard = ({ title, icon: Icon, accent, rows, unit, suffix, emptyText, on
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{r.name}</p>
                   <p className="text-[11px] text-muted-foreground">{(r.team || '').includes('Men') ? "Men's" : "Women's"}</p>
+                  <GroupBadges athleteId={r.athlete_id} size="xs" className="mt-0.5" />
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">

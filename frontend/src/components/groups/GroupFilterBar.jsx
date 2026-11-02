@@ -81,3 +81,19 @@ export function GroupFilterNotice() {
     </div>
   );
 }
+
+/**
+ * The same group bar at the top of every staff page (the dashboard has its own,
+ * admin pages always show everyone). Shown only when groups exist.
+ */
+export function StaffGroupStrip({ getAuthHeaders, isAdmin }) {
+  const { pathname } = useLocation();
+  if (!pathname.startsWith('/staff/') || pathname.startsWith('/staff/admin')) return null;
+  return (
+    <div className="border-b border-white/10 bg-background/95" data-testid="staff-group-strip">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-2">
+        <GroupFilterBar getAuthHeaders={getAuthHeaders} isAdmin={isAdmin} />
+      </div>
+    </div>
+  );
+}

@@ -314,3 +314,4 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Etiquetas coloridas nos nomes (lista do Admin, seletor de atletas do painel, página do atleta).
 - Limite de atletas carregados nas consultas do painel subiu de 100 para 1000.
 - Testes: `python3 -m unittest tests.test_athlete_groups` (8).
+- 2026-11-02 (2): barra de grupos no topo de todas as páginas da equipe (exceto Admin), página recarrega ao trocar; etiquetas embaixo do nome na lista de atletas do painel, em "sem resposta" e Rankings (busca grupos pelo id do atleta); Relatório Diário (PDF/WhatsApp) e Relatório de Eventos respeitam o grupo e mostram "Group: <nome>".

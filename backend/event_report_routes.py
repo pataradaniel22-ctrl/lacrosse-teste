@@ -514,6 +514,8 @@ def register_event_report_routes(api_router: APIRouter, db, get_current_user):
                 if event.get("archived"):
                     archive_event_id = event["id"]
         report = await build_report(start_date, end_date, team, athlete_id, archive_event_id)
+        from athlete_groups import current_group_meta
+        report["meta"]["group"] = await current_group_meta(db)
         if event:
             report["meta"]["event_name"] = event.get("name")
             report["meta"]["event_type"] = event.get("event_type")

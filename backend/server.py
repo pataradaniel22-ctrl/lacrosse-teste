@@ -3627,9 +3627,11 @@ async def get_daily_report(team: Optional[str] = None, days_ago: int = 0, load_d
             {"dimension": "Readiness to Train", "value": round(sum(e.get('readiness', e.get('readiness_score', 5)) for e in today_entries) / m, 1)},
         ]
 
+    from athlete_groups import current_group_meta
     return {
         "date": target_date,
         "team": team or "All athletes",
+        "group": await current_group_meta(db),
         "summary": summary,
         "readiness_report": readiness_rows,
         "active_alerts": active_alerts,

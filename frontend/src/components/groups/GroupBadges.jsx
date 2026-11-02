@@ -1,10 +1,17 @@
-import { colorOf, useAthleteGroups } from '../../lib/athleteGroups';
+import { colorOf, useAthleteGroupMap, useAthleteGroups } from '../../lib/athleteGroups';
 
-/** Small coloured labels with the athlete's groups (e.g. "Competition"). */
-export default function GroupBadges({ groups: ids, size = 'sm', className = '' }) {
+/**
+ * Small coloured labels with the athlete's groups (e.g. "Competition").
+ * Pass `groups` (list of ids) when the athlete object has them, otherwise
+ * `athleteId` or `athleteName` and they are looked up.
+ */
+export default function GroupBadges({ groups: ids, athleteId, athleteName, size = 'sm', className = '' }) {
   const defs = useAthleteGroups();
-  if (!ids || !ids.length || !defs.length) return null;
-  const items = defs.filter((d) => ids.includes(d.id));
+  const map = useAthleteGroupMap();
+  let list = ids;
+  if (!list && map) list = (athleteId && map.byId[athleteId]) || (athleteName && map.byName[String(athleteName).trim()]) || [];
+  if (!list || !list.length || !defs.length) return null;
+  const items = defs.filter((d) => list.includes(d.id));
   if (!items.length) return null;
   const cls = size === 'xs' ? 'text-[9px] px-1.5 py-0' : 'text-[10px] px-1.5 py-0.5';
   return (

@@ -88,3 +88,39 @@ export function useAthleteGroups() {
   }, []);
   return groups;
 }
+
+// ---------------------------------------------------------------- athlete -> groups
+// For lists that only carry an athlete id/name (reports, rankings...), look the
+// athlete's groups up from one shared, unfiltered roster request.
+let mapCache = null;
+let mapPromise = null;
+const mapListeners = new Set();
+export function refreshAthleteGroupMap() {
+  const token = (() => { try { return localStorage.getItem('token'); } catch { return null; } })();
+  mapPromise = axios.get(`${API}/staff/athletes`, { headers: { Authorization: `Bearer ${token}` }, skipGroupFilter: true })
+    .then((r) => {
+      const list = Array.isArray(r.data) ? r.data : (r.data?.athletes || []);
+      const byId = {}; const byName = {};
+      list.forEach((a) => { byId[a.id] = a.groups || []; if (a.name) byName[a.name.trim()] = a.groups || []; });
+      mapCache = { byId, byName };
+      mapListeners.forEach((l) => l(mapCache));
+      return mapCache;
+    })
+    .catch(() => { mapPromise = null; return mapCache; });
+  return mapPromise;
+}
+export function patchAthleteGroupMap(athleteId, groups) {
+  if (!mapCache) return;
+  mapCache = { ...mapCache, byId: { ...mapCache.byId, [athleteId]: groups } };
+  mapListeners.forEach((l) => l(mapCache));
+}
+export function useAthleteGroupMap() {
+  const [m, setM] = useState(mapCache);
+  useEffect(() => {
+    mapListeners.add(setM);
+    if (!mapCache && !mapPromise) refreshAthleteGroupMap();
+    else if (mapPromise) mapPromise.then((x) => x && setM(x));
+    return () => mapListeners.delete(setM);
+  }, []);
+  return m;
+}

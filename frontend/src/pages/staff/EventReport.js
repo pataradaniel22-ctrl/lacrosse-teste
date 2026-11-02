@@ -431,6 +431,7 @@ export default function EventReport() {
             <h1 className="text-4xl font-black mt-4">Event Report</h1>
             <p className="text-slate-500 mt-2">Integrated analysis of readiness, load, recovery, pain & availability</p>
             {meta.event_name && <p className="text-xl font-semibold mt-6">{meta.event_name}</p>}
+            {meta.group && <p className="text-lg font-semibold mt-2">Group: {meta.group.name}</p>}
             <p className="text-slate-600 mt-2">{meta.start_date} → {meta.end_date} · {meta.num_days} day(s)</p>
             <p className="text-xs text-slate-400 mt-10">Generated {genDate.toLocaleString()}</p>
           </div>
@@ -443,6 +444,7 @@ export default function EventReport() {
               <p className="text-xs uppercase tracking-widest text-white/60">{meta.organization}</p>
               <h2 className="text-2xl font-black">{meta.event_name || 'Event Report'}</h2>
               <p className="text-sm text-white/70">{meta.start_date} → {meta.end_date} · {meta.num_days} monitored day(s)</p>
+              {meta.group && <p className="text-xs mt-1 inline-block rounded-full bg-white/15 px-2 py-0.5 font-semibold" data-testid="event-report-group">Group: {meta.group.name}</p>}
             </div>
             <div className="text-right text-xs text-white/70">
               <p>Generated: {genDate.toLocaleString()}</p>

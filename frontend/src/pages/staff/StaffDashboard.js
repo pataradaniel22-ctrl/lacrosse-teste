@@ -2407,6 +2407,7 @@ function StaffDashboardView() {
                         <p className="text-xs text-muted-foreground">
                           {athlete.team.includes('Men') ? "Men's" : "Women's"}
                         </p>
+                        <GroupBadges groups={athlete.groups} className="mt-1" />
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
@@ -2488,6 +2489,7 @@ function StaffDashboardView() {
                         <p className="text-xs text-muted-foreground">
                           {a.team?.includes('Men') ? "Men's" : "Women's"} · last check-in: {a.last_response || 'never'}
                         </p>
+                        <GroupBadges athleteId={a.athlete_id} size="xs" className="mt-0.5" />
                       </div>
                       <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-400 shrink-0">
                         {a.days_since == null ? 'Never' : `${a.days_since}d ago`}

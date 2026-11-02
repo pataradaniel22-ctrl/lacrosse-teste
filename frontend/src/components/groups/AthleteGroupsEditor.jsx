@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Pencil } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { colorOf, useAthleteGroups } from '../../lib/athleteGroups';
+import { colorOf, useAthleteGroups, patchAthleteGroupMap } from '../../lib/athleteGroups';
 import GroupBadges from './GroupBadges';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -21,6 +21,7 @@ export default function AthleteGroupsEditor({ athlete, canEdit, getAuthHeaders, 
     setBusy(true);
     try {
       await axios.put(`${API}/staff/athletes/${athlete.id}/groups`, { groups: next }, getAuthHeaders());
+      patchAthleteGroupMap(athlete.id, next);
       onChange?.(next);
     } catch (e) {
       setGroups(prev);

@@ -62,6 +62,15 @@ async def load_groups(db) -> list:
     return doc.get("groups") or []
 
 
+async def current_group_meta(db):
+    """{"id", "name"} of the group filter active on this request, or None."""
+    gid = athlete_group_filter.get()
+    if not gid:
+        return None
+    g = next((x for x in await load_groups(db) if x["id"] == gid), None)
+    return {"id": gid, "name": g["name"] if g else gid}
+
+
 class GroupDef(BaseModel):
     id: Optional[str] = None
     name: str
