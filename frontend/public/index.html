@@ -19,14 +19,15 @@
         <meta name="format-detection" content="telephone=no" />
         
         <!-- Icons -->
-        <link rel="icon" type="image/png" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
-        <link rel="apple-touch-icon" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="icon" href="%PUBLIC_URL%/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
+        <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icon-152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icon-180.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icon-167.png" />
         
         <!-- Splash Screens for iOS (optional but nice) -->
-        <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/brazil-lacrosse-logo.png" />
+        <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/icon-512.png" />
         
         <!-- Manifest -->
         <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
@@ -119,8 +120,9 @@
             }
             
             #app-loading img {
-                width: 80px;
-                height: 80px;
+                width: 96px;
+                height: 96px;
+                border-radius: 22px;
                 animation: pulse 1.5s ease-in-out infinite;
             }
             
@@ -141,7 +143,7 @@
     <body>
         <!-- Native-like loading screen -->
         <div id="app-loading">
-            <img src="%PUBLIC_URL%/brazil-lacrosse-logo.png" alt="Loading" />
+            <img src="%PUBLIC_URL%/icon-512.png" alt="Loading" />
             <p>Carregando...</p>
         </div>
         

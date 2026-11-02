@@ -1,6 +1,7 @@
-const CACHE_NAME = 'ams-brasil-lacrosse-v4';
+const CACHE_NAME = 'ams-brasil-lacrosse-v5';
 const urlsToCache = [
   '/brazil-lacrosse-logo.png',
+  '/icon-192.png',
   '/manifest.json'
 ];
 
@@ -127,8 +128,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'AMS Brasil Lacrosse';
   const options = {
     body: data.body || 'Nova notificação',
-    icon: '/brazil-lacrosse-logo.png',
-    badge: '/brazil-lacrosse-logo.png',
+    icon: '/icon-192.png',
+    badge: '/badge-96.png',
     vibrate: [100, 50, 100],
     tag: data.tag || 'default',
     data: { url: data.url || '/', ts: Date.now() },
