@@ -307,3 +307,10 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Entrar com Google (`backend/google_auth.py`, `frontend/src/components/auth/GoogleSignInButton.jsx`): só contas já cadastradas, aprovadas e ativas (mesmo e-mail, sem diferenciar maiúsculas); token do Google verificado no servidor (assinatura, emissor, audiência, validade, e-mail verificado); primeira entrada grava `google_sub` e depois só aquela conta Google entra. Login com senha continua. Botão aparece só com `GOOGLE_CLIENT_ID` configurado. Testes: `python3 -m unittest tests.test_google_auth` (14).
 - 2026-11-02: páginas públicas /privacy (Política de Privacidade, LGPD) e /terms (Termos de Uso), PT/EN, em `frontend/src/pages/Legal.js`; links no rodapé do login. Exigidas pelo Google para publicar o login.
 - 2026-11-02: admin fictício `admin@brazillacrosse.com` (seed antigo) deixa de ser protegido para poder ser desativado; nova rota admin para remover um atleta e todos os seus registros (`backend/athlete_purge.py`, prévia + confirmação pelo e-mail). Usada para remover o atleta de teste "Daniel Test".
+
+## 2026-11-02 — Grupos de atletas (Competition / Training Camp / Development)
+- Admin → Groups: criar/renomear/apagar grupos com cor; atribuir atletas (etiquetas clicáveis, seleção em massa, busca, "sem grupo"). Admin e Coach podem mudar grupos de um atleta (também na página do atleta).
+- Painel: barra "Group" com contagem; escolher um grupo filtra todos os números/gráficos/alertas (servidor filtra via `?group=`); escolha lembrada no aparelho; aviso flutuante "Showing only" nas outras páginas da equipe.
+- Etiquetas coloridas nos nomes (lista do Admin, seletor de atletas do painel, página do atleta).
+- Limite de atletas carregados nas consultas do painel subiu de 100 para 1000.
+- Testes: `python3 -m unittest tests.test_athlete_groups` (8).

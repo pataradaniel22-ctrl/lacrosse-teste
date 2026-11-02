@@ -24,6 +24,15 @@ proxy `db` (`backend/db_context.py`). Toda funcionalidade nova que acesse o banc
 demo automaticamente; **nunca** crie outra conexão direta ao banco (MongoClient/AsyncIOMotorClient) em código de rotas
 sem passar por esse proxy (exceção já tratada: `recovery_storage.py`). Use o modo demo para testar telas de atleta.
 
+## Grupos de atletas (filtro)
+
+Atletas têm `groups` (ids); definições em `app_settings` `athlete_groups` (`backend/athlete_groups.py`). Qualquer
+requisição com `?group=<id>` faz as consultas de **lista** em `db.athletes` (`find`, `count_documents`, `distinct`)
+verem só aquele grupo (`backend/athlete_group_filter.py`, ligado no proxy `db`). Por isso, endpoints novos do painel
+devem partir da lista de atletas via `db.athletes.find(...)` para respeitar o filtro. No site, `lib/athleteGroups.js`
+acrescenta `group` às leituras feitas em páginas `/staff` (exceto `/admin`, `/auth`); use `skipGroupFilter: true` no
+axios para ver todos.
+
 ## Publicação
 
 Push na branch `main` = deploy automático (Vercel para o site, Render para o

@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { InfoTooltip, InfoContent, InfoWarning } from '../../components/ui/info-tooltip';
 import { HelpTooltip, ChartCaption } from '../../components/ui/help-tooltip';
 import { ReadinessByAthleteChart } from '../../components/ReadinessByAthleteChart';
+import GroupFilterBar from '../../components/groups/GroupFilterBar';
+import GroupBadges from '../../components/groups/GroupBadges';
+import { useGroupFilter } from '../../lib/athleteGroups';
 import TeamHydrationChart from '../../components/TeamHydrationChart';
 import ExportModal from '../../components/ExportModal';
 import DailyReportModal from '../../components/DailyReportModal';
@@ -252,6 +255,12 @@ const ReadinessRangeSelector = ({ range, onChange }) => {
 
 
 export default function StaffDashboard() {
+  // Changing the athlete group reloads every chart for that group
+  const [group] = useGroupFilter();
+  return <StaffDashboardView key={group || 'all'} />;
+}
+
+function StaffDashboardView() {
   const { user, logout, getAuthHeaders } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -713,7 +722,7 @@ export default function StaffDashboard() {
                         : '';
                       return (
                         <SelectItem key={a.id} value={a.id} data-testid={`athlete-option-${a.id}`}>
-                          {a.name}{suffix}
+                          {a.name}{suffix} <GroupBadges groups={a.groups} size="xs" className="ml-1" />
                         </SelectItem>
                       );
                     });
@@ -959,6 +968,10 @@ export default function StaffDashboard() {
 
       {/* Main Content */}
       <main id="daily-report-capture" className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
+        {/* Athlete group quick filter */}
+        <div className="mb-4 sm:mb-5">
+          <GroupFilterBar getAuthHeaders={getAuthHeaders} isAdmin={user?.role === 'Admin'} />
+        </div>
         {/* KPI Cards */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">

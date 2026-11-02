@@ -36,6 +36,10 @@ import StaffNotifications from "./pages/staff/StaffNotifications";
 import StaffMessages from "./pages/staff/StaffMessages";
 import InjuryIllness from "./pages/staff/InjuryIllness";
 import DemoBanner from "./components/demo/DemoBanner";
+import { GroupFilterNotice } from "./components/groups/GroupFilterBar";
+import { installGroupFilterInterceptor } from "./lib/athleteGroups";
+
+installGroupFilterInterceptor();
 import TheFittest from "./pages/athlete/TheFittest";
 import TheFittestAdmin from "./pages/staff/TheFittestAdmin";
 import ResearchData from "./pages/staff/ResearchData";
@@ -129,6 +133,7 @@ function App() {
       <AuthProvider>
         <DemoBanner />
         <AppRoutes />
+        <GroupFilterNotice />
         <UpdatePrompt />
         <Toaster position="bottom-center" richColors />
       </AuthProvider>

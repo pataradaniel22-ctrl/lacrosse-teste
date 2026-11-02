@@ -1228,7 +1228,7 @@ async def get_all_athletes(team: Optional[str] = None, current_user: dict = Depe
     if team:
         query["team"] = team
     
-    athletes = await db.athletes.find(query, {"_id": 0, "password_hash": 0}).to_list(100)
+    athletes = await db.athletes.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
     return athletes
 
 # Admin routes for user management
@@ -1257,7 +1257,7 @@ async def get_all_athletes_admin(status: Optional[str] = None, current_user: dic
     if status:
         query["status"] = status
     
-    athletes = await db.athletes.find(query, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(100)
+    athletes = await db.athletes.find(query, {"_id": 0, "password_hash": 0}).sort("created_at", -1).to_list(1000)
     return athletes
 
 @api_router.put("/admin/athlete/{athlete_id}/approve")
@@ -1668,7 +1668,7 @@ async def get_event_dashboard(event_id: str, day: Optional[int] = None, current_
     if event.get('team'):
         athlete_query["team"] = event['team']
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     athlete_ids = [a['id'] for a in athletes]
     athlete_names = {a['id']: a['name'] for a in athletes}
     
@@ -2157,7 +2157,7 @@ async def get_team_pain_analysis(team: Optional[str] = None, current_user: dict 
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     athlete_ids = [a['id'] for a in athletes]
     athlete_names = {a['id']: a['name'] for a in athletes}
     
@@ -2353,7 +2353,7 @@ async def get_dashboard_stats(team: Optional[str] = None, athlete_id: Optional[s
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -2448,7 +2448,7 @@ async def get_persistent_pain(team: Optional[str] = None, days: int = 21, curren
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(200)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     name_map = {a['id']: a['name'] for a in athletes}
     team_map = {a['id']: a.get('team') for a in athletes}
@@ -2536,7 +2536,7 @@ async def get_kpi_athletes(metric: str, team: Optional[str] = None, current_user
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(200)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     name_map = {a['id']: a['name'] for a in athletes}
     team_map = {a['id']: a.get('team') for a in athletes}
@@ -2616,7 +2616,7 @@ async def get_menstrual_stats(team: Optional[str] = None, athlete_id: Optional[s
             "selected_date": None
         }
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -2787,7 +2787,7 @@ async def get_pain_analytics(team: Optional[str] = None, athlete_id: Optional[st
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -2934,7 +2934,7 @@ async def get_workload_metrics(team: Optional[str] = None, athlete_id: Optional[
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -3107,7 +3107,7 @@ async def get_dashboard_charts(team: Optional[str] = None, athlete_id: Optional[
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -3251,7 +3251,7 @@ async def get_daily_report(team: Optional[str] = None, days_ago: int = 0, load_d
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(300)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     name_map = {a['id']: a['name'] for a in athletes}
     team_map = {a['id']: a.get('team') for a in athletes}
@@ -3661,7 +3661,7 @@ async def get_pain_management(team: Optional[str] = None, days: int = 21, curren
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(300)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     name_map = {a['id']: a['name'] for a in athletes}
     team_map = {a['id']: a.get('team') for a in athletes}
@@ -3817,7 +3817,7 @@ async def get_mental_health(team: Optional[str] = None, days: int = 14, current_
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(300)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     name_map = {a['id']: a['name'] for a in athletes}
     team_map = {a['id']: a.get('team') for a in athletes}
@@ -3922,7 +3922,7 @@ async def get_non_responders(team: Optional[str] = None, days: int = 3, current_
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(300)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
 
     today = local_now().date()
     result = []
@@ -3966,7 +3966,7 @@ async def get_rankings(team: Optional[str] = None, days: int = 30, current_user:
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(300)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     ids = [a['id'] for a in athletes]
     meta = {a['id']: {"name": a['name'], "team": a.get('team')} for a in athletes}
 
@@ -4052,7 +4052,7 @@ async def get_load_monitoring(team: Optional[str] = None, athlete_id: Optional[s
     athlete_query = {"active": True}
     if team:
         athlete_query["team"] = team
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(200)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1, "team": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     ids = [a['id'] for a in athletes]
@@ -4212,7 +4212,7 @@ async def get_team_readiness_radar(team: Optional[str] = None, athlete_id: Optio
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -4344,7 +4344,7 @@ async def get_daily_pain_by_region(team: Optional[str] = None, athlete_id: Optio
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -4777,7 +4777,7 @@ async def get_alerts(team: Optional[str] = None, athlete_id: Optional[str] = Non
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -4862,7 +4862,7 @@ async def get_longterm_data(team: Optional[str] = None, athlete_id: Optional[str
     if team:
         athlete_query["team"] = team
     
-    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    athletes = await db.athletes.find(athlete_query, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
     if athlete_id:
         athletes = [a for a in athletes if a['id'] == athlete_id]
     athlete_ids = [a['id'] for a in athletes]
@@ -7205,9 +7205,14 @@ register_google_auth_routes(api_router, db, create_token)
 from athlete_purge import register_athlete_purge_routes  # noqa: E402
 register_athlete_purge_routes(api_router, db, get_current_user)
 
+# Athlete groups (Competition / Training Camp / Development...) + ?group= filter
+from athlete_groups import register_athlete_group_routes, GroupFilterMiddleware  # noqa: E402
+register_athlete_group_routes(api_router, db, get_current_user)
+
 # Include the router
 app.include_router(api_router)
 app.add_middleware(SandboxMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))
+app.add_middleware(GroupFilterMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

@@ -30,10 +30,16 @@ class SandboxAwareDB:
         return self._sandbox
 
     def __getattr__(self, name):
-        return getattr(self.current(), name)
+        return _wrap(name, getattr(self.current(), name))
 
     def __getitem__(self, name):
-        return self.current()[name]
+        return _wrap(name, self.current()[name])
+
+
+def _wrap(name, coll):
+    # Athlete-group filter (?group=...) for list queries on the athletes collection
+    from athlete_group_filter import wrap_collection
+    return wrap_collection(name, coll)
 
 
 class SandboxMiddleware:

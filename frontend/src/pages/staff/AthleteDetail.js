@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import AthleteGroupsEditor from '../../components/groups/AthleteGroupsEditor';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -583,9 +584,17 @@ export default function AthleteDetail() {
             )}
             <div>
               <h1 className="font-heading font-bold text-xl">{athlete.name}</h1>
-              <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                {athlete.team}
-              </Badge>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+                  {athlete.team}
+                </Badge>
+                <AthleteGroupsEditor
+                  key={athlete.id}
+                  athlete={athlete}
+                  canEdit={['Admin', 'Coach'].includes(user?.role)}
+                  getAuthHeaders={getAuthHeaders}
+                />
+              </div>
             </div>
           </div>
           

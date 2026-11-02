@@ -27,7 +27,9 @@ import {
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import DemoModePanel from '../../components/demo/DemoModePanel';
-import { FlaskConical, DatabaseZap } from 'lucide-react';
+import { FlaskConical, DatabaseZap, Tags } from 'lucide-react';
+import GroupsAdminPanel from '../../components/groups/GroupsAdminPanel';
+import GroupBadges from '../../components/groups/GroupBadges';
 import EmergentImportPanel from '../../components/admin/EmergentImportPanel';
 import {
   AlertDialog,
@@ -52,7 +54,7 @@ export default function AdminPanel() {
   const [pendingStaff, setPendingStaff] = useState([]);
   const [allStaff, setAllStaff] = useState([]);
   const [staffConfirm, setStaffConfirm] = useState(null); // { action, staff }
-  const [activeTab, setActiveTab] = useState('pending');
+  const [activeTab, setActiveTab] = useState(() => new URLSearchParams(window.location.search).get('tab') || 'pending');
   const [showClearDialog, setShowClearDialog] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
@@ -448,6 +450,10 @@ export default function AdminPanel() {
               <UserCog className="w-4 h-4" />
               Staff ({allStaff.length})
             </TabsTrigger>
+            <TabsTrigger value="groups" className="flex items-center gap-2" data-testid="tab-groups">
+              <Tags className="w-4 h-4" />
+              Groups
+            </TabsTrigger>
             <TabsTrigger value="demo" className="flex items-center gap-2" data-testid="tab-demo">
               <FlaskConical className="w-4 h-4" />
               Demo mode
@@ -544,6 +550,7 @@ export default function AdminPanel() {
                           <div className="flex items-center gap-2">
                             <p className="font-medium">{athlete.name}</p>
                             {getStatusBadge(athlete.status)}
+                            <GroupBadges groups={athlete.groups} />
                           </div>
                           <p className="text-sm text-muted-foreground">{athlete.email}</p>
                           <p className="text-xs text-muted-foreground">
@@ -644,6 +651,10 @@ export default function AdminPanel() {
           </TabsContent>
 
           {/* ===== All Staff ===== */}
+          <TabsContent value="groups" className="mt-4">
+            <GroupsAdminPanel getAuthHeaders={getAuthHeaders} />
+          </TabsContent>
+
           <TabsContent value="demo" className="mt-4">
             <DemoModePanel getAuthHeaders={getAuthHeaders} />
           </TabsContent>
