@@ -113,7 +113,12 @@ def register_emergent_import_routes(api_router, db, get_current_user):
             raise
         except Exception as e:
             client.close()
-            raise HTTPException(status_code=400, detail=f"Could not connect to the Emergent database: {type(e).__name__}: {str(e)[:200]}")
+            msg = str(e)
+            # keep the per-server errors (they say why: network blocked, TLS, auth…), hide credentials
+            import re as _re
+            servers = _re.findall(r"error=([A-Za-z]+\([^)]{0,160})", msg) or _re.findall(r"error=([^,>]{0,160})", msg)
+            raise HTTPException(status_code=400, detail=f"Could not connect to the Emergent database: {type(e).__name__}. "
+                                                        f"Server errors: {'; '.join(servers[:3]) or msg[:300]}")
 
     async def _status():
         return await db.real.app_settings.find_one({"_id": STATUS_ID}, {"_id": 0}) or {"state": "idle"}
