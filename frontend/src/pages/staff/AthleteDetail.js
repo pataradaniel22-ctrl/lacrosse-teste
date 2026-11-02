@@ -18,6 +18,7 @@ import CMJSection from '../../components/cmj/CMJSection';
 import NutritionHydration from '../../components/NutritionHydration';
 import StaffFeedbackPanel from '../../components/StaffFeedbackPanel';
 import AthleteRecord from '../../components/AthleteRecord';
+import AthleteIirHistory from '../../components/iir/AthleteIirHistory';
 import { toast } from 'sonner';
 import axios from 'axios';
 import { 
@@ -680,6 +681,9 @@ export default function AthleteDetail() {
 
         {/* Staff Feedback (Admin only) */}
         {user?.role === 'Admin' && <StaffFeedbackPanel athleteId={athleteId} />}
+
+        {/* Injury & Illness History — same records as the Injury & Illness tab */}
+        <AthleteIirHistory athleteId={athleteId} getAuthHeaders={getAuthHeaders} />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
