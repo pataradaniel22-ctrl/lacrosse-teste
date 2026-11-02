@@ -28,5 +28,8 @@ services:
       # Only the app's own sites may call the API from a browser.
       - key: CORS_ORIGINS
         value: "https://dailycbl.com,https://www.dailycbl.com,https://lacrosse-teste-virid.vercel.app"
+      # Sign in with Google: OAuth client id (public, not a secret)
+      - key: GOOGLE_CLIENT_ID
+        value: 690565843222-9q2rl2brb08anp4h0cpge4f27fjh0043.apps.googleusercontent.com
       - key: VAPID_CONTACT_EMAIL
         value: mailto:pataradaniel@gmail.com
