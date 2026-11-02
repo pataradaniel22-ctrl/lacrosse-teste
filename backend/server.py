@@ -5009,7 +5009,13 @@ async def get_longterm_data(team: Optional[str] = None, athlete_id: Optional[str
 
 # Seed demo data
 @api_router.post("/seed")
-async def seed_demo_data():
+async def seed_demo_data(current_user: dict = Depends(get_current_user)):
+    # SECURITY: this endpoint WIPES athletes, staff and all monitoring data.
+    # It used to be public; now Admin only and refused once real data exists.
+    if current_user['user_type'] != 'staff' or current_user['user'].get('role') != 'Admin':
+        raise HTTPException(status_code=403, detail="Admin only")
+    if await db.app_settings.find_one({"_id": "demo_seed_disabled"}):
+        raise HTTPException(status_code=403, detail="Demo data is disabled on this installation")
     # Clear existing data
     await db.athletes.delete_many({})
     await db.staff_users.delete_many({})
@@ -6516,6 +6522,8 @@ async def root():
 @api_router.post("/seed-demo")
 async def seed_demo():
     """Create demo data using bulk inserts (production-safe, fast)."""
+    if await db.app_settings.find_one({"_id": "demo_seed_disabled"}):
+        raise HTTPException(status_code=403, detail="Demo data is disabled on this installation")
     import random
     import traceback
     from datetime import timedelta
@@ -6928,8 +6936,13 @@ async def clear_demo_data(current_user: dict = Depends(get_current_user)):
 
 # Force seed endpoint (for production deployment)
 @api_router.post("/admin/force-seed")
-async def force_seed_data():
+async def force_seed_data(current_user: dict = Depends(get_current_user)):
     """Force seed demo data - call this after deployment if data is missing"""
+    # SECURITY: used to be public and creates staff accounts with known passwords.
+    if current_user['user_type'] != 'staff' or current_user['user'].get('role') != 'Admin':
+        raise HTTPException(status_code=403, detail="Admin only")
+    if await db.app_settings.find_one({"_id": "demo_seed_disabled"}):
+        raise HTTPException(status_code=403, detail="Demo data is disabled on this installation")
     import random
     from datetime import timedelta
     from uuid import uuid4 as gen_uuid
@@ -7170,6 +7183,10 @@ register_research_routes(api_router, db, get_current_user)
 from sandbox_routes import register_sandbox_routes  # noqa: E402
 register_sandbox_routes(api_router, db, get_current_user, create_sandbox_token)
 
+# One-off import of the original app's data from Emergent (read-only there)
+from emergent_import import register_emergent_import_routes  # noqa: E402
+register_emergent_import_routes(api_router, db, get_current_user)
+
 # Injury & Illness Recording (clinical surveillance module)
 from iir_routes import register_iir_routes  # noqa: E402
 register_iir_routes(api_router, db, get_current_user)
@@ -7278,6 +7295,10 @@ async def seed_presentation_data():
     logger.info("=== SEED PRESENTATION DATA STARTING ===")
     
     try:
+        # Never seed demo data once real data was imported
+        if await db.app_settings.find_one({"_id": "demo_seed_disabled"}):
+            logger.info("Demo seed disabled (real data imported) - skipping")
+            return
         # Check if we already have athletes - if so, skip seeding
         athlete_count = await db.athletes.count_documents({})
         logger.info(f"Current athlete count: {athlete_count}")

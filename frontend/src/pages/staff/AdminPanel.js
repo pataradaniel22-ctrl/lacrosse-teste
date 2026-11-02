@@ -27,7 +27,8 @@ import {
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import DemoModePanel from '../../components/demo/DemoModePanel';
-import { FlaskConical } from 'lucide-react';
+import { FlaskConical, DatabaseZap } from 'lucide-react';
+import EmergentImportPanel from '../../components/admin/EmergentImportPanel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -451,6 +452,10 @@ export default function AdminPanel() {
               <FlaskConical className="w-4 h-4" />
               Demo mode
             </TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-2" data-testid="tab-import">
+              <DatabaseZap className="w-4 h-4" />
+              Import from Emergent
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-4 space-y-3">
@@ -641,6 +646,10 @@ export default function AdminPanel() {
           {/* ===== All Staff ===== */}
           <TabsContent value="demo" className="mt-4">
             <DemoModePanel getAuthHeaders={getAuthHeaders} />
+          </TabsContent>
+
+          <TabsContent value="import" className="mt-4">
+            <EmergentImportPanel getAuthHeaders={getAuthHeaders} />
           </TabsContent>
 
           <TabsContent value="staff" className="mt-4 space-y-3">
