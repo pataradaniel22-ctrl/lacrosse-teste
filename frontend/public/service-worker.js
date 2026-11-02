@@ -1,4 +1,4 @@
-const CACHE_NAME = 'athlete-pulse-v3';
+const CACHE_NAME = 'ams-brasil-lacrosse-v4';
 const urlsToCache = [
   '/brazil-lacrosse-logo.png',
   '/manifest.json'
