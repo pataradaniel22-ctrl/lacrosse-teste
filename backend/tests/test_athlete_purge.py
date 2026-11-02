@@ -10,7 +10,11 @@ import unittest
 try:
     import fastapi  # noqa: F401
 except ImportError:
-    sys.modules["fastapi"] = types.SimpleNamespace(Depends=lambda x: x, HTTPException=Exception)
+    class HTTPException(Exception):
+        def __init__(self, status_code, detail=None):
+            super().__init__(detail)
+            self.status_code, self.detail = status_code, detail
+    sys.modules["fastapi"] = types.SimpleNamespace(Depends=lambda x: x, HTTPException=HTTPException)
 try:
     import pydantic  # noqa: F401
 except ImportError:

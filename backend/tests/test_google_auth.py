@@ -14,13 +14,14 @@ import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 try:  # the real packages on the server; light stand-ins where they are not installed
-    from fastapi import HTTPException
+    import fastapi  # noqa: F401
 except ImportError:
     class HTTPException(Exception):
         def __init__(self, status_code, detail=None):
             super().__init__(detail)
             self.status_code, self.detail = status_code, detail
-    sys.modules["fastapi"] = types.SimpleNamespace(HTTPException=HTTPException)
+    sys.modules["fastapi"] = types.SimpleNamespace(HTTPException=HTTPException, Depends=lambda x: x)
+HTTPException = sys.modules["fastapi"].HTTPException
 try:
     import pydantic  # noqa: F401
 except ImportError:
