@@ -29,6 +29,8 @@ import SurveyAdmin from "./pages/staff/SurveyAdmin";
 import RecoveryConfig from "./pages/staff/RecoveryConfig";
 import RecoveryIntelligence from "./pages/staff/RecoveryIntelligence";
 import EventReport from "./pages/staff/EventReport";
+import AthleteHub from "./pages/staff/AthleteHub";
+import MyInfo from "./pages/athlete/MyInfo";
 import HealthSurveillance from "./pages/staff/HealthSurveillance";
 import Methodology from "./pages/staff/Methodology";
 import Rankings from "./pages/staff/Rankings";
@@ -95,6 +97,7 @@ function AppRoutes() {
       <Route path="/athlete/messages/:id" element={<ProtectedRoute allowedType="athlete"><AthleteMessages /></ProtectedRoute>} />
       <Route path="/athlete/recovery" element={<ProtectedRoute allowedType="athlete"><RecoveryPoints /></ProtectedRoute>} />
       <Route path="/athlete/nutrition" element={<ProtectedRoute allowedType="athlete"><Nutrition /></ProtectedRoute>} />
+      <Route path="/athlete/my-info" element={<ProtectedRoute allowedType="athlete"><MyInfo /></ProtectedRoute>} />
       <Route path="/athlete/profile" element={<ProtectedRoute allowedType="athlete"><ProfileSettings /></ProtectedRoute>} />
       <Route path="/athlete/the-fittest" element={<ProtectedRoute allowedType="athlete"><TheFittest /></ProtectedRoute>} />
       
@@ -108,6 +111,7 @@ function AppRoutes() {
       <Route path="/staff/research-data" element={<ProtectedRoute allowedType="staff" requireAdmin><ResearchData /></ProtectedRoute>} />
       <Route path="/staff/recovery" element={<ProtectedRoute allowedType="staff"><RecoveryConfig /></ProtectedRoute>} />
       <Route path="/staff/recovery-intelligence" element={<ProtectedRoute allowedType="staff"><RecoveryIntelligence /></ProtectedRoute>} />
+      <Route path="/staff/athlete-hub" element={<ProtectedRoute allowedType="staff"><AthleteHub /></ProtectedRoute>} />
       <Route path="/staff/event-report" element={<ProtectedRoute allowedType="staff"><EventReport /></ProtectedRoute>} />
       <Route path="/staff/health" element={<ProtectedRoute allowedType="staff"><HealthSurveillance /></ProtectedRoute>} />
       <Route path="/staff/pain-management" element={<ProtectedRoute allowedType="staff"><PainManagement /></ProtectedRoute>} />

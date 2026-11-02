@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import AthleteGroupsEditor from '../../components/groups/AthleteGroupsEditor';
+import HubAthleteRecord from '../../components/hub/HubAthleteRecord';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -705,6 +706,7 @@ export default function AthleteDetail() {
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
             <TabsTrigger value="record" data-testid="athlete-tab-record">Prontuário</TabsTrigger>
+            {user?.role !== 'Research' && <TabsTrigger value="hub" data-testid="athlete-tab-hub">Profile & Documents</TabsTrigger>}
           </TabsList>
 
           {/* Readiness Tab with Team Comparison */}
@@ -1586,6 +1588,16 @@ export default function AthleteDetail() {
           </TabsContent>
 
           {/* Clinical Record (Prontuário) Tab */}
+          {user?.role !== 'Research' && (
+            <TabsContent value="hub" className="mt-4">
+              <Card className="glass-light border-white/10">
+                <CardContent className="p-4">
+                  <HubAthleteRecord athleteId={athleteId} getAuthHeaders={getAuthHeaders} showHeader={false} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
           <TabsContent value="record" className="mt-4">
             <AthleteRecord athleteId={athleteId} />
           </TabsContent>

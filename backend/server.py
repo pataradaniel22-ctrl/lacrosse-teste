@@ -7211,6 +7211,10 @@ register_athlete_purge_routes(api_router, db, get_current_user)
 from athlete_groups import register_athlete_group_routes, GroupFilterMiddleware  # noqa: E402
 register_athlete_group_routes(api_router, db, get_current_user)
 
+# Athlete Hub: staff registry (profile fields, documents, requests)
+from athlete_hub import register_athlete_hub_routes  # noqa: E402
+register_athlete_hub_routes(api_router, db, get_current_user)
+
 # Include the router
 app.include_router(api_router)
 app.add_middleware(SandboxMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))

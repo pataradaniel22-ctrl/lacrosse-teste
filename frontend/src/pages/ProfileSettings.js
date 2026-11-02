@@ -1,12 +1,12 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Camera, User, Save, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Camera, User, Save, Loader2, KeyRound, Eye, EyeOff, IdCard } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -265,6 +265,20 @@ export default function ProfileSettings() {
             </div>
           </CardContent>
         </Card>
+
+        {userType === 'athlete' && (
+          <Link to="/athlete/my-info" className="block mt-6" data-testid="profile-my-info-link">
+            <Card className="glass-light border-primary/30 hover:bg-white/5 transition-colors">
+              <CardContent className="p-4 flex items-center gap-3">
+                <IdCard className="w-5 h-5 text-primary" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">My info & documents</p>
+                  <p className="text-xs text-muted-foreground">Passport, contact details, certificates for the staff</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        )}
 
         <Card className="glass-light border-white/10 mt-6" data-testid="change-password-card">
           <CardHeader>

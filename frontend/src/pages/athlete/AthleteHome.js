@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/pop
 import { toast } from 'sonner';
 import axios from 'axios';
 import InstallAppModal from '../../components/InstallAppModal';
+import HubRequestsBanner from '../../components/hub/HubRequestsBanner';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { 
   Sun, 
@@ -377,6 +378,7 @@ export default function AthleteHome() {
 
       {/* Main Content */}
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
+        <HubRequestsBanner getAuthHeaders={getAuthHeaders} />
         {/* Pending quick survey */}
         {pendingSurveys.length > 0 && (
           <Card className="border-fuchsia-500/40 bg-fuchsia-500/10 animate-fade-in" data-testid="pending-survey-banner">

@@ -58,6 +58,7 @@ import {
   Stethoscope,
   Brain,
   Database,
+  IdCard,
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
@@ -836,6 +837,11 @@ function StaffDashboardView() {
                       );
                       return (
                         <div className="max-h-[70vh] overflow-y-auto divide-y divide-white/5">
+                          {user?.role !== 'Research' && (
+                            <Section title="Team">
+                              <Item icon={IdCard} color="text-primary" label="Athlete Hub" testid="athlete-hub-nav-btn" onClick={() => navigate('/staff/athlete-hub')} />
+                            </Section>
+                          )}
                           <Section title="Monitoring">
                             <Item icon={ShieldCheck} color="text-emerald-400" label="Recovery" testid="recovery-intel-nav-btn" onClick={() => navigate('/staff/recovery-intelligence')} />
                             <Item icon={HeartPulse} color="text-cyan-400" label="Health" testid="health-nav-btn" onClick={() => navigate('/staff/health')} />

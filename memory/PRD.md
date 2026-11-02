@@ -315,3 +315,12 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Limite de atletas carregados nas consultas do painel subiu de 100 para 1000.
 - Testes: `python3 -m unittest tests.test_athlete_groups` (8).
 - 2026-11-02 (2): barra de grupos no topo de todas as páginas da equipe (exceto Admin), página recarrega ao trocar; etiquetas embaixo do nome na lista de atletas do painel, em "sem resposta" e Rankings (busca grupos pelo id do atleta); Relatório Diário (PDF/WhatsApp) e Relatório de Eventos respeitam o grupo e mostram "Group: <nome>".
+
+## 2026-11-02 — Athlete Hub (substitui a planilha TRACKER)
+- Página Staff `/staff/athlete-hub` (Menu → Team): cartões de resumo clicáveis (passaporte, validade <6 meses, anuidade 2026, Safeguarding, faltando), tabela com busca/colunas/CSV/seleção em massa, ficha em painel lateral.
+- Ficha: campos padrão (nome, sobrenome, e-mail, telefone, endereço, cidade, país, nascimento+idade, passaporte+validade, CPF+número, anuidade 2026+plano, WL Safeguarding, PALSC self/coach/staff, notas) — admin edita; aba "Profile & Documents" no perfil do atleta.
+- Documentos (foto/PDF ≤10MB) por tipo; leitura automática do passaporte (zona MRZ, no navegador) com confirmação.
+- Pedidos: admin/técnico pedem itens a atletas (push + aviso na home do atleta); fecham sozinhos quando completos.
+- Atleta: `/athlete/my-info` (preencher, anexar, ver pedidos); link no Perfil; aviso na Home.
+- Admin → Customize: criar/renomear/esconder/reordenar campos, opções e cores, visibilidade (admins/staff), atleta pode preencher/ver, obrigatório, tipos de documento.
+- Segurança: CPF/endereço/passaporte só admin por padrão; Research sem dados pessoais; auditoria de alterações e visualizações.

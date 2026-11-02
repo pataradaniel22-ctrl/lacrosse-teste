@@ -33,6 +33,14 @@ devem partir da lista de atletas via `db.athletes.find(...)` para respeitar o fi
 acrescenta `group` às leituras feitas em páginas `/staff` (exceto `/admin`, `/auth`); use `skipGroupFilter: true` no
 axios para ver todos.
 
+## Athlete Hub (cadastro da equipe)
+
+Ficha de cada atleta (campos configuráveis pelo admin), documentos e pedidos de pendência: `backend/athlete_hub.py`
+(rotas) e `backend/athlete_hub_logic.py` (regras, testadas em `tests/test_athlete_hub_logic.py`). Coleções
+`athlete_profiles`, `athlete_documents` (arquivos no GridFS em `athlete-hub/<atleta>/`), `hub_requests`, `hub_audit`;
+configuração em `app_settings` (`hub_fields`, `hub_doc_types`). Visibilidade por campo: `admin` (sensível) ou `staff`;
+Research nunca vê dados pessoais. Site: `pages/staff/AthleteHub.js`, `components/hub/*`, `pages/athlete/MyInfo.js`.
+
 ## Publicação
 
 Push na branch `main` = deploy automático (Vercel para o site, Render para o
