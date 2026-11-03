@@ -29,6 +29,7 @@ export default function AthleteHub() {
   const [data, setData] = useState(null);
   const [tab, setTab] = useState('overview');
   const [q, setQ] = useState('');
+  const [team, setTeam] = useState(() => { try { return localStorage.getItem('ams.hub.team') || 'all'; } catch { return 'all'; } });
   const [filter, setFilter] = useState(null); // {key, value} | {key:'__missing'} | {key, alert}
   const [selected, setSelected] = useState(new Set());
   const [open, setOpen] = useState(null);
@@ -43,17 +44,21 @@ export default function AthleteHub() {
   }, [getAuthHeaders]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)); } catch { /* ignore */ } }, [cols]);
+  useEffect(() => { try { localStorage.setItem('ams.hub.team', team); } catch { /* ignore */ } }, [team]);
 
   const fields = useMemo(() => (data?.fields || []).filter((f) => !f.hidden), [data]);
   const fieldBy = useMemo(() => Object.fromEntries(fields.map((f) => [f.key, f])), [fields]);
-  const rows = data?.rows || [];
+  const allRows = data?.rows || [];
+  const isWomen = (r) => /women/i.test(r.athlete.team || '');
+  const teamCounts = { all: allRows.length, men: allRows.filter((r) => !isWomen(r)).length, women: allRows.filter(isWomen).length };
+  const rows = team === 'all' ? allRows : allRows.filter((r) => (team === 'women' ? isWomen(r) : !isWomen(r)));
 
   // Summary cards: required select fields + date alerts
   const cards = useMemo(() => fields.filter((f) => f.type === 'select' && f.required).map((f) => {
     const counts = {};
     rows.forEach((r) => { const v = r.values[f.key] || '__none'; counts[v] = (counts[v] || 0) + 1; });
     return { field: f, counts };
-  }), [fields, rows]);
+  }), [fields, rows]); // eslint-disable-line react-hooks/exhaustive-deps
   const dateAlerts = useMemo(() => fields.filter((f) => f.type === 'date' && f.alert_days).map((f) => ({
     field: f,
     expired: rows.filter((r) => r.alerts?.[f.key] === 'expired').length,
@@ -114,6 +119,17 @@ export default function AthleteHub() {
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
+            {/* Men / Women */}
+            <div className="flex items-center gap-2 flex-wrap" data-testid="hub-team-filter">
+              {[['all', 'All'], ['men', "Men's"], ['women', "Women's"]].map(([k, label]) => (
+                <button key={k} type="button" onClick={() => { setTeam(k); setSelected(new Set()); }}
+                  className={`text-sm px-4 py-1.5 rounded-full border transition-colors ${team === k ? 'bg-primary border-primary text-primary-foreground font-semibold' : 'border-white/10 text-muted-foreground hover:text-foreground hover:border-white/25'}`}
+                  data-testid={`hub-team-${k}`}>
+                  {label} <span className="opacity-70">{teamCounts[k]}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" data-testid="hub-summary">
               <Card className="glass-light border-white/10">
