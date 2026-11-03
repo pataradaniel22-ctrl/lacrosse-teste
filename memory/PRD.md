@@ -324,3 +324,4 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Atleta: `/athlete/my-info` (preencher, anexar, ver pedidos); link no Perfil; aviso na Home.
 - Admin → Customize: criar/renomear/esconder/reordenar campos, opções e cores, visibilidade (admins/staff), atleta pode preencher/ver, obrigatório, tipos de documento.
 - Segurança: CPF/endereço/passaporte só admin por padrão; Research sem dados pessoais; auditoria de alterações e visualizações.
+- 2026-11-02 (2): cartão "Athlete profile" no topo da página de cada atleta (identidade, contato, status, documentos, faltando) com atalho para a aba completa. Privacidade: middleware `backend/athlete_privacy.py` remove `groups`/`password_hash`/`google_sub` de toda resposta JSON para atletas; login (senha/Google) de atleta não devolve grupos; `/auth/me` não devolve mais `password_hash` (vazava para o próprio usuário).

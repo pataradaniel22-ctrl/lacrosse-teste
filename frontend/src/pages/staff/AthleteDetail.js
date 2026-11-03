@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import AthleteGroupsEditor from '../../components/groups/AthleteGroupsEditor';
 import HubAthleteRecord from '../../components/hub/HubAthleteRecord';
+import AthleteSummaryCard from '../../components/hub/AthleteSummaryCard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../../components/ui/button';
@@ -616,6 +617,13 @@ export default function AthleteDetail() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+        {/* Athlete encyclopedia: identity, contact and admin status */}
+        {user?.role !== 'Research' && (
+          <AthleteSummaryCard
+            athleteId={athleteId} getAuthHeaders={getAuthHeaders}
+            onOpenFull={() => { setActiveTab('hub'); setTimeout(() => document.getElementById('athlete-tabs')?.scrollIntoView({ behavior: 'smooth' }), 50); }}
+          />
+        )}
         {/* Quick Stats Row */}
         {compliance && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -696,7 +704,7 @@ export default function AthleteDetail() {
         <AthleteIirHistory athleteId={athleteId} getAuthHeaders={getAuthHeaders} />
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
+        <Tabs id="athlete-tabs" value={activeTab} onValueChange={setActiveTab} className="animate-fade-in">
           <TabsList className="bg-muted/50 flex-wrap h-auto justify-start gap-1">
             <TabsTrigger value="readiness">Readiness</TabsTrigger>
             <TabsTrigger value="workload">Workload</TabsTrigger>

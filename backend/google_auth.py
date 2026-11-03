@@ -118,7 +118,8 @@ async def google_login(db, credential: str, create_token, client_ids=None, signi
     if not linked:
         await collection.update_one({"id": user["id"]}, {"$set": {"google_sub": claims["sub"]}})
 
-    user_data = {k: v for k, v in user.items() if k not in ("password_hash", "google_sub")}
+    hidden = ("password_hash", "google_sub", "groups") if user_type == "athlete" else ("password_hash", "google_sub")
+    user_data = {k: v for k, v in user.items() if k not in hidden}
     return {"token": create_token(user["id"], user_type), "user_type": user_type, "user": user_data}
 
 

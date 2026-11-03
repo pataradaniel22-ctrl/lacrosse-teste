@@ -31,7 +31,8 @@ requisição com `?group=<id>` faz as consultas de **lista** em `db.athletes` (`
 verem só aquele grupo (`backend/athlete_group_filter.py`, ligado no proxy `db`). Por isso, endpoints novos do painel
 devem partir da lista de atletas via `db.athletes.find(...)` para respeitar o filtro. No site, `lib/athleteGroups.js`
 acrescenta `group` às leituras feitas em páginas `/staff` (exceto `/admin`, `/auth`); use `skipGroupFilter: true` no
-axios para ver todos.
+axios para ver todos. **Atletas nunca veem grupos**: `backend/athlete_privacy.py` remove a chave `groups` de toda
+resposta JSON para token de atleta — não exibir grupos em telas de atleta.
 
 ## Athlete Hub (cadastro da equipe)
 

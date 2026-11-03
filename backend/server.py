@@ -618,7 +618,7 @@ async def login(data: LoginRequest):
             if status == 'rejected':
                 raise HTTPException(status_code=403, detail="Your registration was not approved. Please contact the team administrator.")
             
-            user_data = {k: v for k, v in athlete.items() if k != 'password_hash'}
+            user_data = {k: v for k, v in athlete.items() if k not in ('password_hash', 'google_sub', 'groups')}
             token = create_token(athlete['id'], "athlete")
             return {"token": token, "user_type": "athlete", "user": user_data}
     
@@ -794,7 +794,8 @@ async def change_password(data: ChangePasswordRequest, current_user: dict = Depe
 
 @api_router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
-    return current_user
+    user = {k: v for k, v in current_user["user"].items() if k not in ("password_hash", "google_sub")}
+    return {**current_user, "user": user}
 
 # Morning Check-In routes
 @api_router.post("/readiness", response_model=dict)
@@ -7219,6 +7220,10 @@ register_athlete_hub_routes(api_router, db, get_current_user)
 app.include_router(api_router)
 app.add_middleware(SandboxMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))
 app.add_middleware(GroupFilterMiddleware)
+
+# Athletes never receive staff-only labels (groups) or credential fields
+from athlete_privacy import AthletePrivacyMiddleware  # noqa: E402
+app.add_middleware(AthletePrivacyMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))
 
 app.add_middleware(
     CORSMiddleware,
