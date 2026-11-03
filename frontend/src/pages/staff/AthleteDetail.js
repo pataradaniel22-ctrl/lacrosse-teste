@@ -713,7 +713,7 @@ export default function AthleteDetail() {
             <TabsTrigger value="nutrition" data-testid="athlete-tab-nutrition">Nutrition</TabsTrigger>
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
-            <TabsTrigger value="record" data-testid="athlete-tab-record">Prontuário</TabsTrigger>
+            <TabsTrigger value="record" data-testid="athlete-tab-record">Clinical Record</TabsTrigger>
             {user?.role !== 'Research' && <TabsTrigger value="hub" data-testid="athlete-tab-hub">Profile & Documents</TabsTrigger>}
           </TabsList>
 
@@ -1607,7 +1607,7 @@ export default function AthleteDetail() {
           )}
 
           <TabsContent value="record" className="mt-4">
-            <AthleteRecord athleteId={athleteId} />
+            <AthleteRecord athleteId={athleteId} athleteName={athlete?.name} />
           </TabsContent>
 
         </Tabs>

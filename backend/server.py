@@ -3770,43 +3770,7 @@ class AthleteNoteCreate(BaseModel):
     related: Optional[str] = None
 
 
-@api_router.get("/staff/athlete/{athlete_id}/notes")
-async def get_athlete_notes(athlete_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user['user_type'] != 'staff':
-        raise HTTPException(status_code=403, detail="Staff only")
-    notes = await db.athlete_notes.find({"athlete_id": athlete_id}, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return {"count": len(notes), "notes": notes}
-
-
-@api_router.post("/staff/athlete/{athlete_id}/notes")
-async def add_athlete_note(athlete_id: str, body: AthleteNoteCreate, current_user: dict = Depends(get_current_user)):
-    if current_user['user_type'] != 'staff':
-        raise HTTPException(status_code=403, detail="Staff only")
-    text = (body.body or "").strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="Note body is required")
-    doc = {
-        "id": str(uuid.uuid4()),
-        "athlete_id": athlete_id,
-        "author": current_user['user'].get('name') or current_user['user'].get('email'),
-        "author_role": current_user['user'].get('role'),
-        "category": body.category or "General",
-        "related": (body.related or None),
-        "body": text,
-        "created_at": local_now().isoformat(),
-    }
-    await db.athlete_notes.insert_one(dict(doc))
-    return {"success": True, "note": doc}
-
-
-@api_router.delete("/staff/athlete-note/{note_id}")
-async def delete_athlete_note(note_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user['user']['role'] != 'Admin':
-        raise HTTPException(status_code=403, detail="Admin only")
-    res = await db.athlete_notes.delete_one({"id": note_id})
-    if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Note not found")
-    return {"success": True}
+# Clinical Record routes (notes) live in clinical_record.py
 
 
 @api_router.get("/staff/mental-health")
@@ -7215,6 +7179,10 @@ register_athlete_group_routes(api_router, db, get_current_user)
 # Athlete Hub: staff registry (profile fields, documents, requests)
 from athlete_hub import register_athlete_hub_routes  # noqa: E402
 register_athlete_hub_routes(api_router, db, get_current_user)
+
+# Clinical Record (athlete notes: retroactive dates, SOAP, attachments, revision history)
+from clinical_record import register_clinical_record_routes  # noqa: E402
+register_clinical_record_routes(api_router, db, get_current_user)
 
 # Include the router
 app.include_router(api_router)

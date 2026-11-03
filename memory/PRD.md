@@ -327,3 +327,9 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - 2026-11-02 (2): cartão "Athlete profile" no topo da página de cada atleta (identidade, contato, status, documentos, faltando) com atalho para a aba completa. Privacidade: middleware `backend/athlete_privacy.py` remove `groups`/`password_hash`/`google_sub` de toda resposta JSON para atletas; login (senha/Google) de atleta não devolve grupos; `/auth/me` não devolve mais `password_hash` (vazava para o próprio usuário).
 - 2026-11-02 (3): novo layout da ficha (Profile & Documents / painel lateral): barra de completude, cartões de status (passaporte+validade, anuidade+plano, Safeguarding+arquivo, CPF, PALSC x/y), blocos por seção com ícones e linhas compactas, faltando em etiquetas, documentos em bloco próprio.
 - 2026-11-02 (4): Athlete Hub com filtro All / Men's / Women's (vale para cartões e tabela, lembrado no aparelho).
+
+## 2026-11-02 — Clinical Record (antigo Prontuário)
+- Aba "Clinical Record" em inglês: registros com tipo (Assessment, Treatment, Follow-up, Return to play, Test/Imaging, Medication, Communication, Note), área, data do ocorrido (retroativa) + hora, título, texto livre ou SOAP, região, dor 0–10, disponibilidade (Full/Modified/Out), data de reavaliação, anexos (foto/PDF ≤10MB), confidencial (só Admin/Physio + autor).
+- Edição pelo autor ou admin com histórico de versões; exclusão só admin e lógica (fica no banco). Research não vê o prontuário.
+- Tela: resumo (último registro, disponibilidade, reavaliações pendentes, 30 dias), lista de reavaliações com "done", filtros por tipo/área, busca, linha do tempo por mês, CSV.
+- Código: `backend/clinical_record.py`, `backend/clinical_record_logic.py` (testes `tests/test_clinical_record_logic.py`), `frontend/src/components/AthleteRecord.jsx`.
