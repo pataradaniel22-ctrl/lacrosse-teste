@@ -69,7 +69,8 @@ def register_athlete_hub_routes(api_router, db, get_current_user):
     async def load_config():
         f = await db.app_settings.find_one({"_id": FIELDS_ID})
         d = await db.app_settings.find_one({"_id": DOCS_ID})
-        return (f or {}).get("fields") or L.default_fields(), (d or {}).get("types") or L.default_doc_types()
+        return (L.merge_defaults((f or {}).get("fields"), L.default_fields()),
+                L.merge_defaults((d or {}).get("types"), L.default_doc_types()))
 
     def who(cu):
         u = cu["user"]

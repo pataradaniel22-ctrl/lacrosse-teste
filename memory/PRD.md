@@ -333,3 +333,9 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Edição pelo autor ou admin com histórico de versões; exclusão só admin e lógica (fica no banco). Research não vê o prontuário.
 - Tela: resumo (último registro, disponibilidade, reavaliações pendentes, 30 dias), lista de reavaliações com "done", filtros por tipo/área, busca, linha do tempo por mês, CSV.
 - Código: `backend/clinical_record.py`, `backend/clinical_record_logic.py` (testes `tests/test_clinical_record_logic.py`), `frontend/src/components/AthleteRecord.jsx`.
+
+## 2026-11-02 — Área médica no Athlete Hub
+- 30 campos médicos em 6 seções (Body, Emergency & Insurance, Medical history, Consents, Nutrition & Diet, Medical notes) + 3 tipos de documento médico (seguro, liberação médica, exames/laudos).
+- Novo nível de visibilidade `medical` (Admin + Physio). Contato de emergência, alergias, liberação, consentimento, altura e alertas visíveis a todo o staff; o resto só equipe médica. Configs salvas recebem campos novos automaticamente (`merge_defaults`).
+- Ficha com abas "Profile & Admin" | "Medical" (alertas médicos coloridos, contato de emergência com botão de ligar, cartões alergia/medicação/cirurgia/lesão/liberação/consentimento/corpo-IMC). Hub com visão "Medical" (cartões e colunas próprios). Cartão do topo do perfil mostra alertas, alergias e emergência. Página do atleta separa "Medical information".
+- Importados dados médicos dos 24 atletas do app a partir da planilha "brasil-lacrosse-atletas-2026-11-03.xlsx" (sem sobrescrever o que já existia).

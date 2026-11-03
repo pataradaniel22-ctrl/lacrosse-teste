@@ -13,12 +13,16 @@ from typing import Optional
 
 FIELD_TYPES = {"text", "email", "phone", "date", "select", "number", "textarea"}
 TONES = {"green", "yellow", "red", "gray", "blue"}
-SECTIONS = ["Personal", "Contact", "Documents", "Admin & Dues", "Certifications", "Other"]
+SECTIONS = ["Personal", "Contact", "Documents", "Admin & Dues", "Certifications", "Other",
+            "Body", "Emergency & Insurance", "Medical history", "Consents", "Nutrition & Diet", "Medical notes"]
+MEDICAL_SECTIONS = {"Body", "Emergency & Insurance", "Medical history", "Consents", "Nutrition & Diet", "Medical notes"}
+MEDICAL_ROLES = {"Admin", "Physio"}
 _KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 MAX_FIELDS = 60
 MAX_DOC_TYPES = 20
 
-S, A = "staff", "admin"
+S, A, M = "staff", "admin", "medical"   # M: admins + physios (clinical staff)
+VISIBILITIES = {S, A, M}
 
 
 def _opt(value, tone, label=None):
@@ -55,6 +59,42 @@ DEFAULT_FIELDS = [
     {"key": "palsc_coach", "label": "PALSC Coach-eval", "type": "select", "section": "Certifications", "visibility": S, "athlete_editable": False, "options": DONE_OPTS},
     {"key": "palsc_staff", "label": "PALSC Support Staff-eval", "type": "select", "section": "Certifications", "visibility": S, "athlete_editable": False, "options": DONE_OPTS},
     {"key": "staff_notes", "label": "Staff notes", "type": "textarea", "section": "Other", "visibility": S, "athlete_editable": False, "athlete_visible": False},
+    {"key": "preferred_name", "label": "Preferred name", "type": "text", "section": "Personal", "visibility": S, "athlete_editable": True},
+    # ---- Medical (separate area of the profile) ----
+    {"key": "height_cm", "label": "Height (cm)", "type": "number", "section": "Body", "visibility": S, "athlete_editable": True},
+    {"key": "weight_kg", "label": "Weight (kg)", "type": "number", "section": "Body", "visibility": M, "athlete_editable": True},
+    {"key": "guardian", "label": "Legal guardian (minors)", "type": "text", "section": "Emergency & Insurance", "visibility": S, "athlete_editable": True},
+    {"key": "emergency_contact", "label": "Emergency contact", "type": "text", "section": "Emergency & Insurance", "visibility": S, "athlete_editable": True, "required": True},
+    {"key": "emergency_phone", "label": "Emergency phone", "type": "phone", "section": "Emergency & Insurance", "visibility": S, "athlete_editable": True, "required": True},
+    {"key": "health_plan", "label": "Health insurance", "type": "text", "section": "Emergency & Insurance", "visibility": M, "athlete_editable": True},
+    {"key": "policy_number", "label": "Policy number", "type": "text", "section": "Emergency & Insurance", "visibility": M, "athlete_editable": True, "sensitive": True},
+    {"key": "doctor_name", "label": "Primary doctor", "type": "text", "section": "Emergency & Insurance", "visibility": M, "athlete_editable": True},
+    {"key": "doctor_phone", "label": "Doctor phone", "type": "phone", "section": "Emergency & Insurance", "visibility": M, "athlete_editable": True},
+    {"key": "has_allergies", "label": "Allergies", "type": "select", "section": "Medical history", "visibility": S, "athlete_editable": True, "required": True,
+     "options": [_opt("No", "green"), _opt("Yes", "red")]},
+    {"key": "drug_allergies", "label": "Medication allergies", "type": "textarea", "section": "Medical history", "visibility": S, "athlete_editable": True},
+    {"key": "food_allergies", "label": "Food / insect allergies", "type": "textarea", "section": "Medical history", "visibility": S, "athlete_editable": True},
+    {"key": "medical_conditions", "label": "Medical conditions", "type": "textarea", "section": "Medical history", "visibility": M, "athlete_editable": True},
+    {"key": "regular_medication", "label": "Regular medication", "type": "select", "section": "Medical history", "visibility": M, "athlete_editable": True,
+     "options": [_opt("No", "green"), _opt("Yes", "yellow")]},
+    {"key": "medication_details", "label": "Medication details", "type": "textarea", "section": "Medical history", "visibility": M, "athlete_editable": True},
+    {"key": "surgery_5y", "label": "Surgery (last 5 years)", "type": "select", "section": "Medical history", "visibility": M, "athlete_editable": True,
+     "options": [_opt("No", "green"), _opt("Yes", "yellow")]},
+    {"key": "surgery_details", "label": "Surgery details", "type": "textarea", "section": "Medical history", "visibility": M, "athlete_editable": True},
+    {"key": "injury_5y", "label": "Injury (last 5 years)", "type": "select", "section": "Medical history", "visibility": M, "athlete_editable": True,
+     "options": [_opt("No", "green"), _opt("Yes", "yellow")]},
+    {"key": "injury_details", "label": "Injury details", "type": "textarea", "section": "Medical history", "visibility": M, "athlete_editable": True},
+    {"key": "scat6_baseline", "label": "SCAT6 baseline symptoms", "type": "textarea", "section": "Medical history", "visibility": M, "athlete_editable": True},
+    {"key": "medical_clearance", "label": "Medical clearance", "type": "select", "section": "Consents", "visibility": S, "athlete_editable": True, "required": True,
+     "options": [_opt("Yes", "green"), _opt("No", "red"), _opt("Pending", "yellow")]},
+    {"key": "treatment_consent", "label": "Treatment authorization", "type": "select", "section": "Consents", "visibility": S, "athlete_editable": True, "required": True,
+     "options": [_opt("Agreed", "green"), _opt("Not agreed", "red")]},
+    {"key": "consent_signature", "label": "Signed by", "type": "text", "section": "Consents", "visibility": M, "athlete_editable": True},
+    {"key": "dietary_restrictions", "label": "Dietary restrictions", "type": "textarea", "section": "Nutrition & Diet", "visibility": S, "athlete_editable": True},
+    {"key": "diet_notes", "label": "Diet notes", "type": "textarea", "section": "Nutrition & Diet", "visibility": S, "athlete_editable": True},
+    {"key": "medical_alerts", "label": "Medical alerts", "type": "text", "section": "Medical notes", "visibility": S, "athlete_editable": False, "athlete_visible": False,
+     "help": "Separate alerts with ';' — e.g. Allergies (orange); Asthma (red); All clear (normal)"},
+    {"key": "medical_staff_notes", "label": "Medical staff notes", "type": "textarea", "section": "Medical notes", "visibility": M, "athlete_editable": False, "athlete_visible": False},
 ]
 
 DEFAULT_DOC_TYPES = [
@@ -62,6 +102,9 @@ DEFAULT_DOC_TYPES = [
     {"key": "safeguarding_certificate", "label": "WL Safeguarding certificate", "visibility": S, "athlete_can_upload": True, "required": True, "field": "safeguarding"},
     {"key": "cpf_document", "label": "CPF document", "visibility": A, "athlete_can_upload": True, "required": False, "field": "cpf_status"},
     {"key": "other", "label": "Other document", "visibility": A, "athlete_can_upload": True, "required": False},
+    {"key": "insurance_card", "label": "Health insurance card", "visibility": M, "athlete_can_upload": True, "required": False, "field": "health_plan"},
+    {"key": "medical_clearance_doc", "label": "Medical clearance / physical", "visibility": M, "athlete_can_upload": True, "required": False, "field": "medical_clearance"},
+    {"key": "medical_report", "label": "Medical exams / reports", "visibility": M, "athlete_can_upload": True, "required": False},
 ]
 
 ALLOWED_DOC_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf", "image/heic": "heic", "image/heif": "heif"}
@@ -81,6 +124,18 @@ def default_fields() -> list:
 
 def default_doc_types() -> list:
     return [dict(d, builtin=True) for d in DEFAULT_DOC_TYPES]
+
+
+def merge_defaults(stored: list, defaults: list) -> list:
+    """Saved admin config + any built-in item added later (e.g. the medical fields)."""
+    if not stored:
+        return defaults
+    keys = {x["key"] for x in stored}
+    return list(stored) + [d for d in defaults if d["key"] not in keys]
+
+
+def is_medical(field: dict) -> bool:
+    return field.get("section") in MEDICAL_SECTIONS
 
 
 class ConfigError(ValueError):
@@ -130,7 +185,7 @@ def validate_fields(fields: list, previous: Optional[list] = None) -> list:
             "key": key, "label": label, "type": ftype,
             "section": raw.get("section") if raw.get("section") in SECTIONS else "Other",
             "options": options,
-            "visibility": A if raw.get("visibility") == A else S,
+            "visibility": raw.get("visibility") if raw.get("visibility") in VISIBILITIES else S,
             "athlete_editable": bool(raw.get("athlete_editable")),
             "athlete_visible": raw.get("athlete_visible", True) is not False,
             "required": bool(raw.get("required")),
@@ -160,7 +215,7 @@ def validate_doc_types(types: list, previous: Optional[list] = None) -> list:
             key = f"{base[:36]}_{n}"
             n += 1
         seen.add(key)
-        out.append({"key": key, "label": label, "visibility": A if raw.get("visibility") == A else S,
+        out.append({"key": key, "label": label, "visibility": raw.get("visibility") if raw.get("visibility") in VISIBILITIES else S,
                     "athlete_can_upload": raw.get("athlete_can_upload", True) is not False,
                     "required": bool(raw.get("required")), "field": raw.get("field") or None,
                     "builtin": key in prev_builtin})
@@ -176,7 +231,10 @@ def can_see(item: dict, role: str, user_type: str) -> bool:
         return True
     if role == "Research":
         return False
-    return item.get("visibility", S) == S
+    vis = item.get("visibility", S)
+    if vis == M:
+        return role in MEDICAL_ROLES
+    return vis == S
 
 
 def visible_values(values: dict, fields: list, role: str, user_type: str) -> dict:

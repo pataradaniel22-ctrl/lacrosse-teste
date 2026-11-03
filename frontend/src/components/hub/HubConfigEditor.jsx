@@ -62,7 +62,7 @@ export default function HubConfigEditor({ getAuthHeaders: gah, onSaved }) {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Profile fields</CardTitle>
           <p className="text-xs text-muted-foreground">
-            <b>Who can see:</b> "Admins only" for sensitive data (CPF, address); "All staff" shows it to coaches and physios too. Research users never see personal data.
+            <b>Who can see:</b> "Admins only" for sensitive data (CPF, address); "Medical staff" for health data (admins + physios); "All staff" shows it to coaches too. Research users never see personal data.
             Built-in fields can be hidden but not deleted (their data is kept).
           </p>
         </CardHeader>
@@ -75,7 +75,7 @@ export default function HubConfigEditor({ getAuthHeaders: gah, onSaved }) {
                   <button type="button" onClick={() => setOpenKey(isOpen ? null : (f.key || `new-${i}`))} className="text-muted-foreground">{isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</button>
                   <Input value={f.label} onChange={(e) => upd(i, { label: e.target.value })} className="h-8 flex-1 min-w-[8rem] bg-background/50 border-white/10 text-sm" maxLength={60} />
                   <span className="hidden sm:inline text-[10px] text-muted-foreground w-24 truncate">{TYPES.find((t) => t[0] === f.type)?.[1]}</span>
-                  <span className={`hidden sm:inline text-[10px] px-1.5 rounded ${f.visibility === 'admin' ? 'bg-red-500/15 text-red-300' : 'bg-white/10'}`}>{f.visibility === 'admin' ? 'admins' : 'staff'}</span>
+                  <span className={`hidden sm:inline text-[10px] px-1.5 rounded ${f.visibility === 'admin' ? 'bg-red-500/15 text-red-300' : f.visibility === 'medical' ? 'bg-rose-500/15 text-rose-300' : 'bg-white/10'}`}>{f.visibility === 'admin' ? 'admins' : f.visibility === 'medical' ? 'medical' : 'staff'}</span>
                   <button type="button" title={f.hidden ? 'Show' : 'Hide'} onClick={() => upd(i, { hidden: !f.hidden })} className="p-1">{f.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                   <button type="button" onClick={() => move(i, -1)} className="p-1" aria-label="Move up"><ArrowUp className="w-4 h-4" /></button>
                   <button type="button" onClick={() => move(i, 1)} className="p-1" aria-label="Move down"><ArrowDown className="w-4 h-4" /></button>
@@ -97,7 +97,7 @@ export default function HubConfigEditor({ getAuthHeaders: gah, onSaved }) {
                       </label>
                       <label className="flex items-center gap-1.5">Who can see
                         <select value={f.visibility} onChange={(e) => upd(i, { visibility: e.target.value })} className="h-8 rounded-md bg-background/50 border border-white/10 px-2" data-testid={`hub-field-visibility-${f.key || i}`}>
-                          <option value="staff">All staff</option><option value="admin">Admins only</option>
+                          <option value="staff">All staff</option><option value="medical">Medical staff (admins & physios)</option><option value="admin">Admins only</option>
                         </select>
                       </label>
                       {f.type === 'date' && (
@@ -151,7 +151,7 @@ export default function HubConfigEditor({ getAuthHeaders: gah, onSaved }) {
             <div key={d.key || `nd-${i}`} className="flex items-center gap-3 flex-wrap rounded-lg border border-white/10 bg-background/40 p-2 text-xs">
               <Input value={d.label} onChange={(e) => updDoc(i, { label: e.target.value })} className="h-8 w-56 bg-background/50 border-white/10 text-sm" maxLength={60} />
               <select value={d.visibility} onChange={(e) => updDoc(i, { visibility: e.target.value })} className="h-8 rounded-md bg-background/50 border border-white/10 px-2">
-                <option value="staff">All staff can see</option><option value="admin">Admins only</option>
+                <option value="staff">All staff can see</option><option value="medical">Medical staff only</option><option value="admin">Admins only</option>
               </select>
               <Toggle on={d.athlete_can_upload} onChange={(v) => updDoc(i, { athlete_can_upload: v })} label="Athlete can upload" />
               <Toggle on={d.required} onChange={(v) => updDoc(i, { required: v })} label="Required" />

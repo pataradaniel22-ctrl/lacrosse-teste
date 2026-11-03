@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Phone, Mail, MapPin, Cake, FileCheck2, AlertTriangle, ChevronRight, IdCard } from 'lucide-react';
+import { Phone, Mail, MapPin, Cake, FileCheck2, AlertTriangle, ChevronRight, IdCard, HeartPulse, Siren } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { ValuePill } from './FieldInput';
-import { API, formatValue } from '../../lib/hub';
+import { API, formatValue, parseAlerts, toneOf } from '../../lib/hub';
 
 const KEY_FIELDS = ['passport_status', 'passport_expiry', 'dues_2026', 'safeguarding', 'cpf_status'];
 
@@ -58,6 +58,24 @@ export default function AthleteSummaryCard({ athleteId, getAuthHeaders, onOpenFu
             <span className="text-xs flex items-center gap-1"><FileCheck2 className="w-3.5 h-3.5 text-sky-400" />{docCount}</span>
           </div>
         </div>
+        {(v.medical_alerts || v.has_allergies || v.emergency_contact) && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-rose-500/20 bg-rose-500/5 px-3 py-2" data-testid="athlete-summary-medical">
+            <span className="text-[10px] uppercase tracking-wider text-rose-300 flex items-center gap-1"><HeartPulse className="w-3.5 h-3.5" />Medical</span>
+            {v.medical_alerts && (
+              <span className="flex flex-wrap gap-1 items-center"><Siren className="w-3.5 h-3.5 text-muted-foreground" />
+                {parseAlerts(v.medical_alerts).map((a, i) => <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full border ${toneOf(a.tone).pill}`}>{a.label}</span>)}
+              </span>
+            )}
+            {f.has_allergies && v.has_allergies && (
+              <span className="text-xs">Allergies: <ValuePill field={f.has_allergies} value={v.has_allergies} />{v.has_allergies === 'Yes' && (v.drug_allergies || v.food_allergies) ? <span className="text-muted-foreground"> {[v.drug_allergies, v.food_allergies].filter(Boolean).join(' · ').slice(0, 60)}</span> : null}</span>
+            )}
+            {v.emergency_contact && (
+              <span className="text-xs flex items-center gap-1">Emergency: <b>{v.emergency_contact}</b>
+                {v.emergency_phone && <a href={`tel:${v.emergency_phone}`} className="text-emerald-400 hover:underline">{v.emergency_phone}</a>}
+              </span>
+            )}
+          </div>
+        )}
         {rec.missing.length > 0 && (
           <p className="text-[11px] text-amber-300 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" />Missing: {rec.missing.map((m) => m.label).join(' · ')}</p>
         )}

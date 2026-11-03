@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import {
-  ArrowLeft, IdCard, Search, Send, Download, Settings2, Loader2, AlertTriangle, Columns3, FileCheck2, X, Users,
+  ArrowLeft, IdCard, Search, Send, Download, Settings2, Loader2, AlertTriangle, Columns3, FileCheck2, X, Users, HeartPulse,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card, CardContent } from '../../components/ui/card';
@@ -16,11 +16,14 @@ import HubAthleteRecord from '../../components/hub/HubAthleteRecord';
 import RequestDialog from '../../components/hub/RequestDialog';
 import HubConfigEditor from '../../components/hub/HubConfigEditor';
 import { ValuePill } from '../../components/hub/FieldInput';
-import { API, toneOf, optionOf, formatValue } from '../../lib/hub';
+import { API, toneOf, optionOf, formatValue, isMedicalField, isMedicalDoc } from '../../lib/hub';
 
 const COLS_KEY = 'ams.hub.columns';
-const DEFAULT_COLS = ['passport_status', 'passport_expiry', 'dues_2026', 'safeguarding', 'cpf_status', 'country', 'phone'];
-const readCols = () => { try { return JSON.parse(localStorage.getItem(COLS_KEY)) || null; } catch { return null; } };
+const DEFAULT_COLS = {
+  admin: ['passport_status', 'passport_expiry', 'dues_2026', 'safeguarding', 'cpf_status', 'country', 'phone'],
+  medical: ['medical_alerts', 'has_allergies', 'regular_medication', 'surgery_5y', 'injury_5y', 'medical_clearance', 'emergency_contact', 'emergency_phone'],
+};
+const readCols = (view) => { try { return JSON.parse(localStorage.getItem(`${COLS_KEY}.${view}`)) || null; } catch { return null; } };
 
 export default function AthleteHub() {
   const { user, getAuthHeaders: gah } = useAuth();
@@ -34,7 +37,8 @@ export default function AthleteHub() {
   const [selected, setSelected] = useState(new Set());
   const [open, setOpen] = useState(null);
   const [reqFor, setReqFor] = useState(null);
-  const [cols, setCols] = useState(readCols() || DEFAULT_COLS);
+  const [view, setView] = useState(() => { try { return localStorage.getItem('ams.hub.view') || 'admin'; } catch { return 'admin'; } });
+  const [cols, setCols] = useState(() => readCols(view) || DEFAULT_COLS[view]);
 
   const load = useCallback(async () => {
     try {
@@ -43,18 +47,24 @@ export default function AthleteHub() {
     } catch (e) { toast.error(e?.response?.data?.detail || 'Could not load the Athlete Hub'); }
   }, [getAuthHeaders]);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { try { localStorage.setItem(COLS_KEY, JSON.stringify(cols)); } catch { /* ignore */ } }, [cols]);
+  useEffect(() => { try { localStorage.setItem(`${COLS_KEY}.${view}`, JSON.stringify(cols)); } catch { /* ignore */ } }, [cols]); // eslint-disable-line react-hooks/exhaustive-deps
+  const switchView = (v) => {
+    setView(v); setFilter(null); setCols(readCols(v) || DEFAULT_COLS[v]);
+    try { localStorage.setItem('ams.hub.view', v); } catch { /* ignore */ }
+  };
   useEffect(() => { try { localStorage.setItem('ams.hub.team', team); } catch { /* ignore */ } }, [team]);
 
-  const fields = useMemo(() => (data?.fields || []).filter((f) => !f.hidden), [data]);
+  const fields = useMemo(() => (data?.fields || []).filter((f) => !f.hidden && isMedicalField(f) === (view === 'medical')), [data, view]);
+  const viewKeys = useMemo(() => new Set([...fields.map((f) => f.key), ...(data?.doc_types || []).filter((d) => isMedicalDoc(d, Object.fromEntries((data?.fields || []).map((f) => [f.key, f]))) === (view === 'medical')).map((d) => d.key)]), [fields, data, view]);
   const fieldBy = useMemo(() => Object.fromEntries(fields.map((f) => [f.key, f])), [fields]);
   const allRows = data?.rows || [];
   const isWomen = (r) => /women/i.test(r.athlete.team || '');
   const teamCounts = { all: allRows.length, men: allRows.filter((r) => !isWomen(r)).length, women: allRows.filter(isWomen).length };
-  const rows = team === 'all' ? allRows : allRows.filter((r) => (team === 'women' ? isWomen(r) : !isWomen(r)));
+  const rows = (team === 'all' ? allRows : allRows.filter((r) => (team === 'women' ? isWomen(r) : !isWomen(r))))
+    .map((r) => ({ ...r, missing: r.missing.filter((m) => viewKeys.has(m.key)) }));
 
   // Summary cards: required select fields + date alerts
-  const cards = useMemo(() => fields.filter((f) => f.type === 'select' && f.required).map((f) => {
+  const cards = useMemo(() => fields.filter((f) => f.type === 'select' && (f.required || view === 'medical')).map((f) => {
     const counts = {};
     rows.forEach((r) => { const v = r.values[f.key] || '__none'; counts[v] = (counts[v] || 0) + 1; });
     return { field: f, counts };
@@ -119,6 +129,18 @@ export default function AthleteHub() {
           <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
+            {/* Admin | Medical view */}
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/40 p-1 max-w-md" data-testid="hub-view-tabs">
+              <button type="button" onClick={() => switchView('admin')} data-testid="hub-view-admin"
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium ${view === 'admin' ? 'bg-background shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+                <IdCard className="w-4 h-4" />Profile & Admin
+              </button>
+              <button type="button" onClick={() => switchView('medical')} data-testid="hub-view-medical"
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium ${view === 'medical' ? 'bg-rose-500/15 text-rose-200 shadow ring-1 ring-rose-500/40' : 'text-muted-foreground hover:text-foreground'}`}>
+                <HeartPulse className="w-4 h-4" />Medical
+              </button>
+            </div>
+
             {/* Men / Women */}
             <div className="flex items-center gap-2 flex-wrap" data-testid="hub-team-filter">
               {[['all', 'All'], ['men', "Men's"], ['women', "Women's"]].map(([k, label]) => (
@@ -250,7 +272,7 @@ export default function AthleteHub() {
                       <td className="p-2 text-muted-foreground">{r.age ?? '—'}</td>
                       {tableCols.map((k) => <td key={k} className="p-2"><ValuePill field={fieldBy[k]} value={r.values[k]} alert={r.alerts?.[k]} /></td>)}
                       <td className="p-2">
-                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><FileCheck2 className="w-3.5 h-3.5" />{Object.values(r.doc_counts).reduce((a, b) => a + b, 0)}</span>
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><FileCheck2 className="w-3.5 h-3.5" />{Object.entries(r.doc_counts).filter(([k]) => viewKeys.has(k)).reduce((a, [, b]) => a + b, 0)}</span>
                       </td>
                       <td className="p-2">
                         {r.missing.length ? (

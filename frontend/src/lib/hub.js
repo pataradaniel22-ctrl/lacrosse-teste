@@ -61,7 +61,22 @@ export async function documentBlobUrl(doc, getAuthHeaders) {
   return URL.createObjectURL(r.data);
 }
 
-export const SECTION_ORDER = ['Personal', 'Contact', 'Documents', 'Admin & Dues', 'Certifications', 'Other'];
+export const SECTION_ORDER = ['Personal', 'Contact', 'Documents', 'Admin & Dues', 'Certifications', 'Other',
+  'Emergency & Insurance', 'Medical history', 'Consents', 'Body', 'Nutrition & Diet', 'Medical notes'];
+export const MEDICAL_SECTIONS = new Set(['Body', 'Emergency & Insurance', 'Medical history', 'Consents', 'Nutrition & Diet', 'Medical notes']);
+export const isMedicalField = (f) => MEDICAL_SECTIONS.has(f?.section);
+export const MEDICAL_DOC_KEYS = new Set(['insurance_card', 'medical_clearance_doc', 'medical_report']);
+export const isMedicalDoc = (d, fieldsByKey = {}) => MEDICAL_DOC_KEYS.has(d.key) || (d.field && isMedicalField(fieldsByKey[d.field]));
+
+/** "Allergies (orange); Asthma (red); All clear (normal)" -> [{label, tone}] */
+export function parseAlerts(text) {
+  return String(text || '').split(/[;\n]/).map((x) => x.trim()).filter(Boolean).map((x) => {
+    const m = x.match(/\(([^)]+)\)\s*$/);
+    const c = (m ? m[1] : '').toLowerCase();
+    const tone = /red|vermelh/.test(c) ? 'red' : /orange|laranja|yellow|amarel/.test(c) ? 'yellow' : /normal|green|verde/.test(c) ? 'green' : 'gray';
+    return { label: m ? x.slice(0, m.index).trim() : x, tone };
+  });
+}
 
 export function groupBySection(fields) {
   const out = {};

@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Pencil, Save, X, Loader2, Send, AlertTriangle, History, Clock, CheckCircle2, User, Phone, IdCard, Wallet, Award, StickyNote, Lock, Paperclip, PenLine, FolderOpen } from 'lucide-react';
+import { Pencil, Save, X, Loader2, Send, AlertTriangle, History, Clock, CheckCircle2, User, Phone, IdCard, Wallet, Award, StickyNote, Lock, Paperclip, PenLine, FolderOpen, HeartPulse, Siren, ShieldPlus, Pill, Scale, Salad, ClipboardCheck, Stethoscope } from 'lucide-react';
 import { Button } from '../ui/button';
 import FieldInput, { ValuePill } from './FieldInput';
 import DocumentsPanel from './DocumentsPanel';
 import PassportSuggestion from './PassportSuggestion';
 import RequestDialog from './RequestDialog';
 import GroupBadges from '../groups/GroupBadges';
-import { API, groupBySection, toneOf, optionOf, formatValue } from '../../lib/hub';
+import { API, groupBySection, toneOf, optionOf, formatValue, isMedicalField, isMedicalDoc, parseAlerts } from '../../lib/hub';
 
-const SECTION_ICONS = { Personal: User, Contact: Phone, Documents: IdCard, 'Admin & Dues': Wallet, Certifications: Award, Other: StickyNote };
+const SECTION_ICONS = {
+  Personal: User, Contact: Phone, Documents: IdCard, 'Admin & Dues': Wallet, Certifications: Award, Other: StickyNote,
+  Body: Scale, 'Emergency & Insurance': ShieldPlus, 'Medical history': Stethoscope, Consents: ClipboardCheck, 'Nutrition & Diet': Salad, 'Medical notes': HeartPulse,
+};
+const MEDICAL_TILE_KEYS = ['has_allergies', 'regular_medication', 'surgery_5y', 'injury_5y', 'medical_clearance', 'treatment_consent'];
+const DETAIL_OF = { has_allergies: ['drug_allergies', 'food_allergies'], regular_medication: ['medication_details'], surgery_5y: ['surgery_details'], injury_5y: ['injury_details'] };
 
 const ACTIONS = {
   values_changed: 'changed', document_uploaded: 'uploaded a document', document_viewed: 'viewed a document',
@@ -28,6 +33,7 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
   const [saving, setSaving] = useState(false);
   const [passport, setPassport] = useState(null);
   const [reqOpen, setReqOpen] = useState(false);
+  const [area, setArea] = useState('profile');
 
   const load = useCallback(async () => {
     try {
@@ -50,7 +56,13 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
   if (error) return <p className="text-sm text-red-400 p-4">{error}</p>;
   if (!rec) return <div className="flex justify-center p-8"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>;
 
-  const fields = rec.fields.filter((f) => !f.hidden);
+  const allFields = rec.fields.filter((f) => !f.hidden);
+  const medicalFields = allFields.filter(isMedicalField);
+  const fields = area === 'medical' ? medicalFields : allFields.filter((f) => !isMedicalField(f));
+  const allBy = Object.fromEntries(allFields.map((f) => [f.key, f]));
+  const areaDocTypes = rec.doc_types.filter((d) => (area === 'medical') === isMedicalDoc(d, allBy));
+  const areaKeys = new Set([...fields.map((f) => f.key), ...areaDocTypes.map((d) => d.key)]);
+  const areaMissing = rec.missing.filter((m) => areaKeys.has(m.key));
   const vals = edit ? draft : rec.values;
   const startEdit = () => { setDraft({ ...rec.values }); setEdit(true); };
   const isFilled = (k) => rec.values[k] !== undefined && rec.values[k] !== null && rec.values[k] !== '';
@@ -70,8 +82,24 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
     return tile;
   };
   const palsc = fields.filter((f) => f.key.startsWith('palsc_'));
-  const tiles = fields.filter((f) => f.type === 'select' && (f.required || ['cpf_status'].includes(f.key))).map(tileFor);
-  if (palsc.length) {
+  const short = (t) => (t && t.length > 38 ? `${t.slice(0, 36)}…` : t);
+  const tiles = area === 'medical'
+    ? MEDICAL_TILE_KEYS.filter((k) => fby[k]).map((k) => {
+      const t = tileFor(fby[k]);
+      const det = (DETAIL_OF[k] || []).map((d) => rec.values[d]).filter(Boolean).join(' · ');
+      if (det && rec.values[k] === 'Yes') t.sub = short(det);
+      return t;
+    })
+    : fields.filter((f) => f.type === 'select' && (f.required || ['cpf_status'].includes(f.key))).map(tileFor);
+  if (area === 'medical' && fby.height_cm && rec.values.height_cm) {
+    const h = Number(rec.values.height_cm); const w = Number(rec.values.weight_kg);
+    const bmi = h && w ? (w / ((h / 100) ** 2)).toFixed(1) : null;
+    tiles.push({ key: 'body', label: 'Body', Icon: Scale, tone: 'blue', value: `${Math.round(h)} cm${w ? ` · ${w} kg` : ''}`, sub: bmi ? `BMI ${bmi}` : '' });
+  }
+  const alerts = area === 'medical' ? parseAlerts(rec.values.medical_alerts) : [];
+  if (area === 'medical') {
+    // nothing else
+  } else if (palsc.length) {
     const done = palsc.filter((f) => rec.values[f.key] === 'Done').length;
     const na = palsc.filter((f) => rec.values[f.key] === 'N/A').length;
     const filledP = palsc.filter((f) => isFilled(f.key)).length;
@@ -92,11 +120,25 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
         </div>
       )}
 
+      {/* Profile & Admin | Medical */}
+      {medicalFields.length > 0 && (
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-muted/40 p-1" data-testid="hub-area-tabs">
+          <button type="button" onClick={() => setArea('profile')} data-testid="hub-area-profile"
+            className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors ${area === 'profile' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+            <IdCard className="w-4 h-4" />Profile & Admin
+          </button>
+          <button type="button" onClick={() => setArea('medical')} data-testid="hub-area-medical"
+            className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors ${area === 'medical' ? 'bg-rose-500/15 text-rose-200 shadow ring-1 ring-rose-500/40' : 'text-muted-foreground hover:text-foreground'}`}>
+            <HeartPulse className="w-4 h-4" />Medical
+          </button>
+        </div>
+      )}
+
       {/* Actions + completeness */}
       <div className="flex items-center gap-3 flex-wrap rounded-xl border border-white/10 bg-background/40 p-3">
         <div className="flex-1 min-w-[12rem]">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-muted-foreground">Profile completeness</span>
+            <span className="text-muted-foreground">{area === 'medical' ? 'Medical info completeness' : 'Profile completeness'}</span>
             <b className={pct === 100 ? 'text-emerald-400' : pct >= 60 ? 'text-amber-300' : 'text-red-300'}>{pct}%</b>
           </div>
           <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -115,6 +157,34 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
         </div>
       </div>
 
+      {area === 'medical' && !edit && (
+        <div className="grid md:grid-cols-2 gap-2">
+          <div className={`rounded-xl border p-3 ${alerts.some((a) => a.tone === 'red') ? 'border-red-500/40 bg-red-500/10' : alerts.some((a) => a.tone === 'yellow') ? 'border-amber-400/40 bg-amber-400/10' : 'border-emerald-500/30 bg-emerald-500/5'}`} data-testid="hub-medical-alerts">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><Siren className="w-3.5 h-3.5" />Medical alerts</p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {alerts.length ? alerts.map((a, i) => <span key={i} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${toneOf(a.tone).pill}`}>{a.label}</span>)
+                : <span className="text-xs text-muted-foreground">No alerts recorded</span>}
+            </div>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-background/40 p-3" data-testid="hub-emergency-card">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1"><Phone className="w-3.5 h-3.5" />Emergency contact</p>
+            {rec.values.emergency_contact || rec.values.emergency_phone ? (
+              <div className="mt-1.5 flex items-center justify-between gap-2 flex-wrap">
+                <div>
+                  <p className="text-sm font-semibold">{rec.values.emergency_contact || '—'}</p>
+                  {rec.values.guardian && <p className="text-[11px] text-muted-foreground">Legal guardian: {rec.values.guardian}</p>}
+                </div>
+                {rec.values.emergency_phone && (
+                  <a href={`tel:${rec.values.emergency_phone}`} className="text-xs px-3 py-1.5 rounded-full bg-emerald-500 text-white font-semibold flex items-center gap-1" data-testid="hub-emergency-call">
+                    <Phone className="w-3.5 h-3.5" />{rec.values.emergency_phone}
+                  </a>
+                )}
+              </div>
+            ) : <p className="text-xs text-red-300 mt-1.5">Not filled — ask the athlete</p>}
+          </div>
+        </div>
+      )}
+
       {/* Status at a glance */}
       {!edit && tiles.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2" data-testid="hub-status-tiles">
@@ -128,11 +198,11 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
         </div>
       )}
 
-      {rec.missing.length > 0 && (
+      {areaMissing.length > 0 && (
         <div className="rounded-xl border border-amber-400/30 bg-amber-400/5 p-3">
-          <p className="text-xs font-medium text-amber-300 flex items-center gap-1.5 mb-2"><AlertTriangle className="w-3.5 h-3.5" />Missing ({rec.missing.length})</p>
+          <p className="text-xs font-medium text-amber-300 flex items-center gap-1.5 mb-2"><AlertTriangle className="w-3.5 h-3.5" />Missing ({areaMissing.length})</p>
           <div className="flex flex-wrap gap-1.5">
-            {rec.missing.map((m) => (
+            {areaMissing.map((m) => (
               <span key={`${m.kind}-${m.key}`} className="text-[11px] px-2 py-0.5 rounded-full border border-amber-400/30 bg-amber-400/10 text-amber-200 flex items-center gap-1">
                 {m.kind === 'doc' ? <Paperclip className="w-3 h-3" /> : <PenLine className="w-3 h-3" />}{m.label}{m.kind === 'doc' ? ' (file)' : ''}
               </span>
@@ -180,6 +250,7 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
                     <dt className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
                       {f.label}
                       {f.visibility === 'admin' && <Lock className="w-3 h-3 text-red-300/80" title="Only admins can see this" />}
+                      {f.visibility === 'medical' && <HeartPulse className="w-3 h-3 text-rose-300/80" title="Only admins and physios can see this" />}
                     </dt>
                     <dd className={edit ? '' : 'text-right min-w-0'}>
                       {edit ? <FieldInput field={f} value={vals[f.key]} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
@@ -203,12 +274,12 @@ export default function HubAthleteRecord({ athleteId, getAuthHeaders: gah, onCha
 
       <div className="rounded-xl border border-white/10 bg-background/40 overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 bg-white/[0.03] border-b border-white/10">
-          <p className="text-sm font-semibold flex items-center gap-2"><FolderOpen className="w-4 h-4 text-primary" />Documents</p>
-          <span className="text-[10px] text-muted-foreground">{rec.documents.length} file{rec.documents.length === 1 ? '' : 's'}</span>
+          <p className="text-sm font-semibold flex items-center gap-2"><FolderOpen className="w-4 h-4 text-primary" />{area === 'medical' ? 'Medical documents' : 'Documents'}</p>
+          <span className="text-[10px] text-muted-foreground">{rec.documents.filter((d) => areaKeys.has(d.doc_type)).length} file(s)</span>
         </div>
         <div className="p-3">
           <DocumentsPanel
-            athleteId={athleteId} docTypes={rec.doc_types} documents={rec.documents} getAuthHeaders={getAuthHeaders}
+            athleteId={athleteId} docTypes={areaDocTypes} documents={rec.documents} getAuthHeaders={getAuthHeaders}
             canUpload={() => rec.is_admin} canDelete={() => rec.is_admin}
             onChanged={() => { load(); onChanged?.(); }}
             onPassportData={rec.is_admin ? setPassport : undefined}

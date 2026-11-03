@@ -2,14 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Loader2, Lock, ClipboardList, CheckCircle2, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Lock, ClipboardList, CheckCircle2, ExternalLink, HeartPulse } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import FieldInput, { ValuePill } from '../../components/hub/FieldInput';
 import DocumentsPanel from '../../components/hub/DocumentsPanel';
 import PassportSuggestion from '../../components/hub/PassportSuggestion';
-import { API, groupBySection } from '../../lib/hub';
+import { API, groupBySection, MEDICAL_SECTIONS } from '../../lib/hub';
 
 const linkify = (text) => String(text || '').split(/(https?:\/\/\S+)/g).map((part, i) => (
   /^https?:\/\//.test(part)
@@ -105,8 +105,13 @@ export default function MyInfo() {
           </CardContent>
         </Card>
 
-        {groupBySection(info.fields).map(([section, fs]) => (
-          <Card key={section} className="glass-light border-white/10">
+        {groupBySection(info.fields).map(([section, fs], idx, arr) => (
+          <div key={section} className="space-y-4">
+          {MEDICAL_SECTIONS.has(section) && !MEDICAL_SECTIONS.has(arr[idx - 1]?.[0]) && (
+            <p className="pt-2 text-sm font-semibold flex items-center gap-2 text-rose-300"><HeartPulse className="w-4 h-4" />Medical information
+              <span className="text-[11px] font-normal text-muted-foreground">— seen only by the medical staff (allergies and emergency contact also by coaches)</span></p>
+          )}
+          <Card className={`glass-light ${MEDICAL_SECTIONS.has(section) ? 'border-rose-500/20' : 'border-white/10'}`}>
             <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold">{section}</p>
               {fs.map((f) => (
@@ -123,6 +128,7 @@ export default function MyInfo() {
               ))}
             </CardContent>
           </Card>
+          </div>
         ))}
       </main>
 

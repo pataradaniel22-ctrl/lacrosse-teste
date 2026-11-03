@@ -94,3 +94,28 @@ class ConfigTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MedicalTests(unittest.TestCase):
+    def test_medical_visibility(self):
+        cond = field("medical_conditions")
+        allergy = field("has_allergies")
+        self.assertTrue(L.can_see(cond, "Admin", "staff"))
+        self.assertTrue(L.can_see(cond, "Physio", "staff"))
+        self.assertFalse(L.can_see(cond, "Coach", "staff"))
+        self.assertTrue(L.can_see(allergy, "Coach", "staff"))     # safety info for every staff member
+        self.assertFalse(L.can_see(field("medical_staff_notes"), None, "athlete"))
+        self.assertTrue(L.is_medical(cond))
+        self.assertFalse(L.is_medical(field("passport_status")))
+
+    def test_merge_adds_new_builtins_keeps_admin_changes(self):
+        stored = [dict(field("first_name"), label="Given name")]
+        merged = L.merge_defaults(stored, L.default_fields())
+        self.assertEqual(merged[0]["label"], "Given name")
+        self.assertIn("emergency_contact", {f["key"] for f in merged})
+        self.assertEqual(len([f for f in merged if f["key"] == "first_name"]), 1)
+
+    def test_medical_visibility_validated(self):
+        out = L.validate_fields([{"label": "Blood type", "visibility": "medical"}, {"label": "X", "visibility": "everyone"}])
+        self.assertEqual(out[0]["visibility"], "medical")
+        self.assertEqual(out[1]["visibility"], "staff")

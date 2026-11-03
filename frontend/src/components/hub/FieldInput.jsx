@@ -1,10 +1,17 @@
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { toneOf, formatValue, optionOf, daysUntil } from '../../lib/hub';
+import { toneOf, formatValue, optionOf, daysUntil, parseAlerts } from '../../lib/hub';
 
 /** Coloured value pill for select fields; formatted text otherwise. */
 export function ValuePill({ field, value, alert, className = '' }) {
   if (value === null || value === undefined || value === '') return <span className={`text-muted-foreground/50 ${className}`}>—</span>;
+  if (field.key === 'medical_alerts') {
+    return (
+      <span className={`inline-flex flex-wrap gap-1 justify-end ${className}`}>
+        {parseAlerts(value).map((a, i) => <span key={i} className={`text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap ${toneOf(a.tone).pill}`}>{a.label}</span>)}
+      </span>
+    );
+  }
   if (field.type === 'select') {
     const o = optionOf(field, value);
     return (
