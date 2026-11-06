@@ -572,32 +572,9 @@ export default function AthleteDetail() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-4">
-            {athlete.profile_photo ? (
-              <img 
-                src={athlete.profile_photo.startsWith('http') ? athlete.profile_photo : `${process.env.REACT_APP_BACKEND_URL}${athlete.profile_photo}`} 
-                alt={athlete.name} 
-                className="w-12 h-12 rounded-xl object-cover" 
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-xl bg-secondary/30 flex items-center justify-center text-xl font-bold">
-                {athlete.name.charAt(0)}
-              </div>
-            )}
-            <div>
-              <h1 className="font-heading font-bold text-xl">{athlete.name}</h1>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                  {athlete.team}
-                </Badge>
-                <AthleteGroupsEditor
-                  key={athlete.id}
-                  athlete={athlete}
-                  canEdit={['Admin', 'Coach'].includes(user?.role)}
-                  getAuthHeaders={getAuthHeaders}
-                />
-              </div>
-            </div>
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Athlete</p>
+            <p className="font-heading font-bold text-base leading-tight truncate">{athlete.name}</p>
           </div>
           
           {/* Export Button */}
@@ -617,6 +594,42 @@ export default function AthleteDetail() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+        {/* Athlete hero: big photo + name */}
+        <section className="relative overflow-hidden rounded-3xl border border-primary/25 mb-4 bg-gradient-to-br from-primary/25 via-emerald-500/10 to-sky-500/10" data-testid="athlete-hero">
+          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+          <div className="absolute -left-10 -bottom-20 w-56 h-56 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-5 p-5 sm:p-7">
+            {athlete.profile_photo ? (
+              <img
+                src={athlete.profile_photo.startsWith('http') ? athlete.profile_photo : `${process.env.REACT_APP_BACKEND_URL}${athlete.profile_photo}`}
+                alt={athlete.name}
+                className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl object-cover ring-4 ring-primary/60 shadow-2xl shadow-black/40 shrink-0"
+                data-testid="athlete-hero-photo"
+              />
+            ) : (
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl ring-4 ring-primary/60 shadow-2xl shadow-black/40 shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-emerald-600 text-black font-heading font-extrabold text-5xl sm:text-6xl" data-testid="athlete-hero-initials">
+                {athlete.name.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 text-center sm:text-left space-y-2">
+              <h1 className="font-heading font-extrabold text-3xl sm:text-5xl leading-none tracking-tight break-words" data-testid="athlete-hero-name">
+                {athlete.name.trim()}
+              </h1>
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow">
+                  {athlete.team}
+                </span>
+                <AthleteGroupsEditor
+                  key={athlete.id}
+                  athlete={athlete}
+                  canEdit={['Admin', 'Coach'].includes(user?.role)}
+                  getAuthHeaders={getAuthHeaders}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Athlete encyclopedia: identity, contact and admin status */}
         {user?.role !== 'Research' && (
           <AthleteSummaryCard

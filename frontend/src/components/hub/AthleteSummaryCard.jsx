@@ -77,7 +77,7 @@ export default function AthleteSummaryCard({ athleteId, getAuthHeaders, onOpenFu
           </div>
         )}
         {rec.missing.length > 0 && (
-          <p className="text-[11px] text-amber-300 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" />Missing: {rec.missing.map((m) => m.label).join(' · ')}</p>
+          <p className="text-[11px] text-amber-300 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5" />Missing: {rec.missing.map((m) => (m.kind === 'doc' ? `${m.label} (file)` : m.label)).join(' · ')}</p>
         )}
       </CardContent>
     </Card>
