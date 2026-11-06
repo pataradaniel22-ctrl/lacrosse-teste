@@ -340,3 +340,8 @@ se 1** (athlete core + admin config). `recovery_routes.py` + `recovery_storage.p
 - Ficha com abas "Profile & Admin" | "Medical" (alertas médicos coloridos, contato de emergência com botão de ligar, cartões alergia/medicação/cirurgia/lesão/liberação/consentimento/corpo-IMC). Hub com visão "Medical" (cartões e colunas próprios). Cartão do topo do perfil mostra alertas, alergias e emergência. Página do atleta separa "Medical information".
 - Importados dados médicos dos 24 atletas do app a partir da planilha "brasil-lacrosse-atletas-2026-11-03.xlsx" (sem sobrescrever o que já existia).
 - 2026-11-06: página do atleta com destaque no topo (foto grande 128–160px com moldura amarela, nome grande, seleção e grupos em fundo degradê); cabeçalho fixo fica só com voltar/nome/exportar. "Missing" diferencia documento ("(file)").
+
+## 2026-11-06 — Central de notificações (sino)
+- Antes: o número contava alertas de saúde, mas a lista só mostrava mensagens (lista vazia com "10"), e não havia como zerar.
+- Agora: `GET /api/staff/notifications` junta alertas de saúde não resolvidos (incluindo sobrecarga automática), mensagens não lidas (admin), documentos enviados por atletas (14 dias, conforme visibilidade), pedidos do Hub concluídos, reavaliações do Clinical Record vencendo/atrasadas e cadastros pendentes (admin). Estado por pessoa em `staff_notif_state` (seen_at + dismissed). Abrir o sino zera o número (`POST /seen`); ✕ esconde só para você (`POST /dismiss`); alerta tem "Resolve" (resolve para todo o staff). Funciona para todos os papéis do staff.
+- Código: `backend/staff_notifications.py`, `backend/staff_notifications_logic.py` (testes `tests/test_staff_notifications_logic.py`), `frontend/src/components/StaffNotificationBell.jsx`.

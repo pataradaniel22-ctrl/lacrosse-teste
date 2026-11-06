@@ -13,6 +13,7 @@ import { InfoTooltip, InfoContent, InfoWarning } from '../../components/ui/info-
 import { HelpTooltip, ChartCaption } from '../../components/ui/help-tooltip';
 import { ReadinessByAthleteChart } from '../../components/ReadinessByAthleteChart';
 import GroupFilterBar from '../../components/groups/GroupFilterBar';
+import StaffNotificationBell from '../../components/StaffNotificationBell';
 import GroupBadges from '../../components/groups/GroupBadges';
 import { useGroupFilter } from '../../lib/athleteGroups';
 import TeamHydrationChart from '../../components/TeamHydrationChart';
@@ -273,7 +274,6 @@ function StaffDashboardView() {
   const [athletes, setAthletes] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [msgUnread, setMsgUnread] = useState(0);
-  const [staffAlerts, setStaffAlerts] = useState(null);
   const [kpiModal, setKpiModal] = useState(null); // 'overload' | 'low_readiness'
   const [kpiAthletes, setKpiAthletes] = useState(null);
   const [kpiLoading, setKpiLoading] = useState(false);
@@ -360,8 +360,6 @@ function StaffDashboardView() {
       if (user?.role === 'Admin') {
         axios.get(`${API}/messages/admin/counts`, getAuthHeaders())
           .then((r) => setMsgUnread(r.data?.unread || 0)).catch(() => {});
-        axios.get(`${API}/messages/admin/alerts`, getAuthHeaders())
-          .then((r) => setStaffAlerts(r.data)).catch(() => {});
       }
       setLongTermData(longTermRes.data);
       setMenstrualStats(menstrualRes.data);
@@ -884,68 +882,7 @@ function StaffDashboardView() {
                   </Link>
                 )}
                 
-                {user?.role === 'Admin' ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9" data-testid="staff-bell-btn">
-                        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                        {(staffAlerts?.total_unread > 0 || alerts.length > 0) && (
-                          <span className={`absolute -top-1 -right-1 min-w-4 h-4 sm:min-w-5 sm:h-5 px-1 rounded-full text-[8px] sm:text-[10px] flex items-center justify-center font-bold ${staffAlerts?.priority_count > 0 ? 'bg-rose-500' : 'bg-destructive'}`}>
-                            {(staffAlerts?.total_unread || 0) + alerts.length}
-                          </span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-80 p-0" data-testid="staff-bell-popover">
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                        <p className="font-semibold text-sm">Alerts</p>
-                        <Link to="/staff/alerts" className="text-xs text-primary hover:underline">Health alerts</Link>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto">
-                        {(!staffAlerts || staffAlerts.total_unread === 0) ? (
-                          <div className="px-4 py-8 text-center text-sm text-muted-foreground" data-testid="staff-bell-empty">No new messages or pain reports.</div>
-                        ) : (
-                          <>
-                            {(staffAlerts.priority || []).map((c) => (
-                              <button key={c.id} type="button" onClick={() => navigate(`/staff/messages/${c.id}`)}
-                                className="w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`staff-alert-${c.id}`}>
-                                <div className="flex items-center gap-2">
-                                  {c.is_pain_related && <HeartPulse className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
-                                  <span className="text-sm font-medium truncate flex-1">{c.athlete_name}</span>
-                                  {(c.priority === 'high' || c.priority === 'urgent') && (
-                                    <Badge className="text-[9px] bg-amber-500/20 text-amber-300 border-amber-500/40 capitalize">{c.priority}</Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-muted-foreground truncate mt-0.5">{c.title}</p>
-                              </button>
-                            ))}
-                            {(staffAlerts.others || []).map((c) => (
-                              <button key={c.id} type="button" onClick={() => navigate(`/staff/messages/${c.id}`)}
-                                className="w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`staff-alert-${c.id}`}>
-                                <div className="flex items-center gap-2">
-                                  <MessageSquare className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                                  <span className="text-sm font-medium truncate flex-1">{c.athlete_name}</span>
-                                </div>
-                                <p className="text-xs text-muted-foreground truncate mt-0.5">{c.title}</p>
-                              </button>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
-                  <Link to="/staff/alerts">
-                    <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-9 sm:w-9" data-testid="alerts-nav-btn">
-                      <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-                      {alerts.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-destructive text-[8px] sm:text-[10px] flex items-center justify-center font-bold">
-                          {alerts.length}
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
-                )}
+                <StaffNotificationBell getAuthHeaders={getAuthHeaders} />
                 
                 {/* Profile Photo / Settings Link */}
                 <Link to="/staff/profile">

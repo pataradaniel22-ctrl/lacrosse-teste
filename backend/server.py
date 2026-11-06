@@ -7184,6 +7184,11 @@ register_athlete_hub_routes(api_router, db, get_current_user)
 from clinical_record import register_clinical_record_routes  # noqa: E402
 register_clinical_record_routes(api_router, db, get_current_user)
 
+# Staff notification centre (bell): alerts, messages, documents, follow-ups, registrations
+from staff_notifications import register_staff_notification_routes  # noqa: E402
+register_staff_notification_routes(api_router, db, get_current_user,
+                                   lambda cu: get_alerts(team=None, athlete_id=None, resolved=False, current_user=cu))
+
 # Include the router
 app.include_router(api_router)
 app.add_middleware(SandboxMiddleware, decode=lambda t: jwt.decode(t, JWT_SECRET, algorithms=[JWT_ALGORITHM]))
